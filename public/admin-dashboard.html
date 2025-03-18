@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,6 +13,7 @@
             display: flex;
             height: 100vh;
         }
+
         #sidebar {
             width: 250px;
             background-color: #f8f9fa;
@@ -19,6 +21,7 @@
             position: fixed;
             padding-top: 20px;
         }
+
         #main-content {
             margin-left: 250px;
             padding: 20px;
@@ -26,6 +29,7 @@
         }
     </style>
 </head>
+
 <body>
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
@@ -56,11 +60,21 @@
                 <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#addEmployeeModal">Add Employee</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#removeEmployeeModal">Remove Employee</a>
+                <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#removeEmployeeModal">Remove
+                    Employee</a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" href="#" id="viewEmployeesButton">View Employees</a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" id="viewAttendanceHistory">View Attendance History</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#salaryPaymentModal" id="salaryPaymentButton">
+                    Salary Payment
+                </a>
+            </li>
+            
         </ul>
     </div>
 
@@ -78,8 +92,8 @@
                         <th>Name</th>
                         <th>Department ID</th>
                         <th>Position</th>
-                        <th>Salary</th>
-                        <th>Bank Details</th>
+                        <!-- <th>Salary</th> -->
+                        <!-- <th>Bank Details</th> -->
                         <th>Date Joined</th>
                     </tr>
                 </thead>
@@ -88,10 +102,27 @@
                 </tbody>
             </table>
         </div>
+
+        <!-- Attendance Records Section -->
+        <div id="attendanceRecordsSection" style="display: none;">
+            <h2>Attendance Records</h2>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="attendanceTableBody">
+                    <!-- Attendance records will be populated here -->
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <!-- Add Employee Modal -->
-    <div class="modal fade" id="addEmployeeModal" tabindex="-1" aria-labelledby="addEmployeeModalLabel" aria-hidden="true">
+    <div class="modal fade" id="addEmployeeModal" tabindex="-1" aria-labelledby="addEmployeeModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -132,7 +163,8 @@
     </div>
 
     <!-- Remove Employee Modal -->
-    <div class="modal fade" id="removeEmployeeModal" tabindex="-1" aria-labelledby="removeEmployeeModalLabel" aria-hidden="true">
+    <div class="modal fade" id="removeEmployeeModal" tabindex="-1" aria-labelledby="removeEmployeeModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -152,7 +184,66 @@
         </div>
     </div>
 
+    <!-- Department Information Modal -->
+    <div class="modal fade" id="departmentModal" tabindex="-1" aria-labelledby="departmentModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="departmentModalLabel">Department Information</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Employee Name</th>
+                                <th>Department Name</th>
+                            </tr>
+                        </thead>
+                        <tbody id="departmentTableBody">
+                            <!-- Department information will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Salary Payment Modal -->
+    <div class="modal fade" id="salaryPaymentModal" tabindex="-1" aria-labelledby="salaryPaymentModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="salaryPaymentModalLabel">Salary Payment</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="salaryPaymentForm">
+                        <div class="mb-3">
+                            <label for="employeeId" class="form-label">Employee ID</label>
+                            <input type="number" class="form-control" id="employeeId" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="baseSalary" class="form-label">Base Salary</label>
+                            <input type="number" class="form-control" id="baseSalary" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="payrollMonth" class="form-label">Month</label>
+                            <input type="text" class="form-control" id="payrollMonth" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="payrollYear" class="form-label">Year</label>
+                            <input type="number" class="form-control" id="payrollYear" required>
+                        </div>
+                        <button type="submit" id="salaryPaymentButton" class="btn btn-primary">Submit Salary Payment</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/admin-dashboard.js"></script>
 </body>
+
 </html>
