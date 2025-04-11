@@ -1,6 +1,6 @@
 // function handleEmployeeLogin(event) {
 //     event.preventDefault();
-    
+
 //     // For now, just redirect to employee dashboard
 //     window.location.href = 'employee-dashboard.html';
 //     return false;
@@ -24,17 +24,17 @@
 //         console.log('Login response:', data); // Debug log
 //         localStorage.setItem('employeeId', data.employeeId);
 //         if (data.role === 'admin') {
-    //             window.location.href = 'admin-dashboard.html';
-    //         } else {
-        //             window.location.href = 'employee-dashboard.html';
-        //         }
-        //     } else {
-            //         const errorMessage = await response.text();
-            //         showAlert(errorMessage, 'danger');
-            //     }
-            // }
+//             window.location.href = 'admin-dashboard.html';
+//         } else {
+//             window.location.href = 'employee-dashboard.html';
+//         }
+//     } else {
+//         const errorMessage = await response.text();
+//         showAlert(errorMessage, 'danger');
+//     }
+// }
 document.getElementById('loginForm').addEventListener('submit', handleEmployeeLogin);
-            
+
 async function handleEmployeeLogin(event) {
     event.preventDefault();
     const employeeId = document.querySelector('#employeeId').value;
@@ -52,16 +52,17 @@ async function handleEmployeeLogin(event) {
 
     if (response.ok) {
         const data = await response.json();
-       console.log('Login response:', data); // Debug log
-    //    console.log(employeeId);
-       localStorage.setItem('employeeId', data.employeeId); // Ensure this is set correctly
-       // Convert to integer if necessary
-       localStorage.setItem('employeeId', parseInt(data.employeeId, 10));
-       if (data.role === 'admin') {
-           window.location.href = 'admin-dashboard.html';
-       } else {
-           window.location.href = 'employee-dashboard.html';
-       }
+        console.log('Login response:', data); // Debug log
+        //    console.log(employeeId);
+        localStorage.setItem('employeeId', data.employeeId); // Ensure this is set correctly
+
+        // Convert to integer if necessary
+        localStorage.setItem('employeeId', parseInt(data.employeeId, 10));
+        if (data.role === 'admin') {
+            window.location.href = 'admin-dashboard.html';
+        } else {
+            window.location.href = 'employee-dashboard.html';
+        }
     } else {
         const errorMessage = await response.text();
         showAlert(errorMessage, 'danger');
@@ -70,7 +71,7 @@ async function handleEmployeeLogin(event) {
 
 async function handleAdminLogin(event) {
     event.preventDefault();
-    
+
     const username = document.querySelector('#adminUsername').value;
     const password = document.querySelector('#adminPassword').value;
 

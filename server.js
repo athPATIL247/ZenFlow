@@ -3,7 +3,7 @@ import bodyParser from 'body-parser';
 import mysql from 'mysql2';
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = 3001;
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -42,27 +42,199 @@ app.post('/login', (req, res) => {
 });
 
 app.post('/add-employee', (req, res) => {
-    const { name, departmentId, position, salary, bankDetails, dateJoined } = req.body;
+    const { name, departmentId, position, dateJoined } = req.body;
+    console.log('📝 Adding new employee:', { name, departmentId, position, dateJoined });
 
     //insert the new employee
-    db.query('INSERT INTO employees (name, department_id, position, bank_details, date_joined) VALUES (?, ?, ?, ?, ?)', 
-        [name, departmentId, position,bankDetails, dateJoined], 
+    db.query('INSERT INTO employees (name, department_id, position, date_joined) VALUES (?, ?, ?, ?)', 
+        [name, departmentId, position, dateJoined], 
         (err, results) => {
             if (err) {
+                console.error('❌ Error adding employee:', err);
                 return res.status(500).send('Error adding employee: ' + err.message);
             }
+            console.log('✅ Employee added successfully:', results);
             res.status(201).send('Employee added successfully');
         });
 });
 
+// app.post('/remove-employee', (req, res) => {
+//     const { id } = req.body;
+//     console.log('🗑️ Attempting to remove employee with ID:', id);
+
+//     if (!id) {
+//         console.log('⚠️ No employee ID provided');
+//         return res.status(400).send('Employee ID is required');
+//     }
+
+//     // First check if the employee exists
+//     db.query('SELECT id, name FROM employees WHERE id = ?', [id], (err, employeeResults) => {
+//         if (err) {
+//             console.error('❌ Error checking employee:', err);
+//             return res.status(500).send('Error checking employee: ' + err.message);
+//         }
+        
+//         if (employeeResults.length === 0) {
+//             console.log('⚠️ Employee not found with ID:', id);
+//             return res.status(404).send('Employee not found');
+//         }
+        
+//         const employeeName = employeeResults[0].name;
+//         console.log('✅ Found employee:', employeeName);
+        
+//         // Start a transaction to ensure all related records are deleted
+//         db.beginTransaction(err => {
+//             if (err) {
+//                 console.error('❌ Error starting transaction:', err);
+//                 return res.status(500).send('Error starting transaction: ' + err.message);
+//             }
+            
+//             // First delete related records from payroll table
+//             db.query('DELETE FROM payroll WHERE id = ?', [id], (err, payrollResults) => {
+//                 if (err) {
+//                     console.error('❌ Error deleting payroll records:', err);
+//                     return db.rollback(() => {
+//                         res.status(500).send('Error deleting payroll records: ' + err.message);
+//                     });
+//                 }
+//                 console.log(`✅ Deleted ${payrollResults.affectedRows} payroll records`);
+                
+//                 // Then delete related records from attendance table
+//                 db.query('DELETE FROM attendance WHERE employee_id = ?', [id], (err, attendanceResults) => {
+//                     if (err) {
+//                         console.error('❌ Error deleting attendance records:', err);
+//                         return db.rollback(() => {
+//                             res.status(500).send('Error deleting attendance records: ' + err.message);
+//                         });
+//                     }
+//                     console.log(`✅ Deleted ${attendanceResults.affectedRows} attendance records`);
+                    
+//                     // Finally delete the employee
+//                     db.query('DELETE FROM employees WHERE id = ?', [id], (err, employeeResults) => {
+//                         if (err) {
+//                             console.error('❌ Error deleting employee:', err);
+//                             return db.rollback(() => {
+//                                 res.status(500).send('Error deleting employee: ' + err.message);
+//                             });
+//                         }
+                        
+//                         // Commit the transaction
+//                         db.commit(err => {
+//                             if (err) {
+//                                 console.error('❌ Error committing transaction:', err);
+//                                 return db.rollback(() => {
+//                                     res.status(500).send('Error committing transaction: ' + err.message);
+//                                 });
+//                             }
+                            
+//                             console.log(`✅ Successfully removed employee ${employeeName} (ID: ${id})`);
+//                             res.send(`Employee ${employeeName} removed successfully`);
+//                         });
+//                     });
+//                 });
+//             });
+//         });
+//     });
+// });
+
 app.post('/remove-employee', (req, res) => {
     const { id } = req.body;
+    console.log('🗑️ Attempting to remove employee with ID:', id);
 
-    db.query('DELETE FROM employees WHERE id = ?', [id], (err, results) => {
+    if (!id) {
+        console.log('⚠️ No employee ID provided');
+        return res.status(400).send('Employee ID is required');
+    }
+
+    // First check if the employee exists
+    db.query('SELECT id, name FROM employees WHERE id = ?', [id], (err, employeeResults) => {
         if (err) {
-            return res.status(500).send('Error removing employee: ' + err.message);
+            console.error('❌ Error checking employee:', err);
+            return res.status(500).send('Error checking employee: ' + err.message);
         }
-        res.send('Employee removed successfully');
+
+        if (employeeResults.length === 0) {
+            console.log('⚠️ Employee not found with ID:', id);
+            return res.status(404).send('Employee not found');
+        }
+
+        const employeeName = employeeResults[0].name;
+        console.log('✅ Found employee:', employeeName);
+
+        // Start a transaction to ensure all related records are deleted
+        db.beginTransaction(err => {
+            if (err) {
+                console.error('❌ Error starting transaction:', err);
+                return res.status(500).send('Error starting transaction: ' + err.message);
+            }
+
+            // Delete from payroll (now using employee_id, not id)
+            db.query('DELETE FROM payroll WHERE id = ?', [id], (err, payrollResults) => {
+                if (err) {
+                    console.error('❌ Error deleting payroll records:', err);
+                    return db.rollback(() => {
+                        res.status(500).send('Error deleting payroll records: ' + err.message);
+                    });
+                }
+                console.log(`✅ Deleted ${payrollResults.affectedRows} payroll records`);
+
+                // Delete from attendance
+                db.query('DELETE FROM attendance WHERE employee_id = ?', [id], (err, attendanceResults) => {
+                    if (err) {
+                        console.error('❌ Error deleting attendance records:', err);
+                        return db.rollback(() => {
+                            res.status(500).send('Error deleting attendance records: ' + err.message);
+                        });
+                    }
+                    console.log(`✅ Deleted ${attendanceResults.affectedRows} attendance records`);
+
+                    // Delete from bankdetails
+                    db.query('DELETE FROM bankdetails WHERE employee_id = ?', [id], (err, bankResults) => {
+                        if (err) {
+                            console.error('❌ Error deleting bank details:', err);
+                            return db.rollback(() => {
+                                res.status(500).send('Error deleting bank details: ' + err.message);
+                            });
+                        }
+                        console.log(`✅ Deleted ${bankResults.affectedRows} bank details`);
+
+                        // Delete from users
+                        db.query('DELETE FROM users WHERE employee_id = ?', [id], (err, userResults) => {
+                            if (err) {
+                                console.error('❌ Error deleting user account:', err);
+                                return db.rollback(() => {
+                                    res.status(500).send('Error deleting user account: ' + err.message);
+                                });
+                            }
+                            console.log(`✅ Deleted ${userResults.affectedRows} user account`);
+
+                            // Delete the employee
+                            db.query('DELETE FROM employees WHERE id = ?', [id], (err, employeeDelResults) => {
+                                if (err) {
+                                    console.error('❌ Error deleting employee:', err);
+                                    return db.rollback(() => {
+                                        res.status(500).send('Error deleting employee: ' + err.message);
+                                    });
+                                }
+
+                                // Commit the transaction
+                                db.commit(err => {
+                                    if (err) {
+                                        console.error('❌ Error committing transaction:', err);
+                                        return db.rollback(() => {
+                                            res.status(500).send('Error committing transaction: ' + err.message);
+                                        });
+                                    }
+
+                                    console.log(`✅ Successfully removed employee ${employeeName} (ID: ${id})`);
+                                    res.send(`Employee ${employeeName} removed successfully`);
+                                });
+                            });
+                        });
+                    });
+                });
+            });
+        });
     });
 });
 
@@ -101,44 +273,85 @@ app.post('/mark-attendance', (req, res) => {
 
 app.get('/get-attendance', (req, res) => {
     const { employeeId } = req.query;
-
-    db.query(
-        `SELECT e.name, a.date, a.status 
-         FROM attendance a 
-         JOIN employees e ON a.employee_id = e.id 
-         WHERE a.employee_id = ?`, 
-        [employeeId], 
-        (err, results) => {
-            if (err) {
-                console.error('Error fetching attendance records:', err);
-                return res.status(500).send('Server error');
-            }
-            res.json(results);
+    
+    console.log('📊 Fetching attendance records for employee ID:', employeeId);
+    
+    if (!employeeId) {
+        console.log('⚠️ No employee ID provided');
+        return res.status(400).send('Employee ID is required');
+    }
+    
+    // First check if the employee exists
+    db.query('SELECT id, name FROM employees WHERE id = ?', [employeeId], (err, employeeResults) => {
+        if (err) {
+            console.error('❌ Error checking employee:', err);
+            return res.status(500).send('Server error');
         }
-    );
+        
+        if (employeeResults.length === 0) {
+            console.log('⚠️ Employee not found with ID:', employeeId);
+            return res.status(404).send('Employee not found');
+        }
+        
+        const employeeName = employeeResults[0].name;
+        console.log('✅ Found employee:', employeeName);
+        
+        // Now fetch attendance records
+        db.query(
+            `SELECT a.date, a.status 
+             FROM attendance a 
+             WHERE a.employee_id = ?
+             ORDER BY a.date DESC`, 
+            [employeeId], 
+            (err, results) => {
+                if (err) {
+                    console.error('❌ Error fetching attendance records:', err);
+                    return res.status(500).send('Server error');
+                }
+                
+                console.log(`✅ Found ${results.length} attendance records for ${employeeName}`);
+                
+                // Add employee name to each record
+                const recordsWithName = results.map(record => ({
+                    ...record,
+                    employeeName: employeeName
+                }));
+                
+                res.json(recordsWithName);
+            }
+        );
+    });
 });
 
-app.get('/get-department', (req, res) => {
-    const { employeeId } = req.query;
+app.get('/get-department/:employeeId', async (req, res) => {
+    const { employeeId } = req.params;
+    console.log('Received request for department info, employee ID:', employeeId);
 
-    db.query(
-        `SELECT e.name, d.department_name 
-         FROM employees e 
-         JOIN departments d ON e.department_id = d.id 
-         WHERE e.id = ?`, 
-        [employeeId], 
-        (err, results) => {
-            if (err) {
-                console.error('Error fetching department information:', err);
-                return res.status(500).send('Server error');
-            }
-            if (results.length > 0) {
-                res.json(results[0]); // Return the first result as JSON
-            } else {
-                res.status(404).send('Employee not found');
-            }
+    if (!employeeId) {
+        console.error('No employee ID provided');
+        return res.status(400).json({ error: 'Employee ID is required' });
+    }
+
+    try {
+        const [rows] = await db.promise().query(
+            `SELECT e.name, e.position, d.name 
+             FROM employees e 
+             JOIN departments d ON e.department_id = d.id 
+             WHERE e.id = ?`, 
+            [employeeId]
+        );
+        console.log('Query results:', rows);
+
+        if (rows.length === 0) {
+            console.log('No department found for employee ID:', employeeId);
+            return res.status(404).json({ error: 'Employee not found' });
         }
-    );
+
+        res.json(rows[0]);
+    } catch (err) {
+        console.error('Database error fetching department information:', err);
+        res.status(500).json({ error: 'Internal server error: ' + err.message });
+    }
 });
 
 // Handle salary payment insertion
@@ -153,6 +366,8 @@ app.post('/add-salary-payment', (req, res) => {
         return res.status(400).send('All fields are required.');
     }
 
+    console.log(`📊 Inserting salary data: Employee ID=${employeeId}, Base Salary=${baseSalary}, Month=${payrollMonth}, Year=${payrollYear}`);
+
     const sql = 'INSERT INTO payroll (id, base_salary, payroll_month, payroll_year) VALUES (?, ?, ?, ?)';
     const values = [employeeId, baseSalary, payrollMonth, payrollYear];
 
@@ -166,8 +381,130 @@ app.post('/add-salary-payment', (req, res) => {
     });
 });
 
+app.get('/get-salary-history', (req, res) => {
+    const { employeeId } = req.query;
 
+    db.query('SELECT * FROM payroll WHERE id = ?', [employeeId], (err, results) => {
+        if (err) {
+            console.error('Error fetching salary history:', err);
+            return res.status(500).send('Server error');
+        }
+        res.json(results);
+    });
+});
 
+// Example using Express and a SQL database
+// Example using Express and a SQL database
+app.get('/get-name/:employeeId', (req, res) => {
+    const {employeeId} = req.params;
+    console.log('Received request for employee name, ID:', employeeId);
+    if (!employeeId) {
+        console.error('No employee ID provided');
+        return res.status(400).json({ error: 'Employee ID is required' });
+    }   
+    const sql = "SELECT name FROM employees WHERE id = ?";
+    db.query(sql, [employeeId], (err, result) => {
+        if (err) return res.status(500).json({ error: err.message });
+        if (result.length > 0) {
+            res.json({ name: result[0].name });
+        } else {
+            res.status(404).json({ message: "Employee not found" });
+        }
+    });
+});
+
+app.get('/get-attendance-by-month', (req, res) => {
+    const { employeeId, month, year } = req.query;
+    
+    console.log('📊 Fetching attendance records for employee ID:', employeeId, 'Month:', month, 'Year:', year);
+    
+    if (!employeeId || !month || !year) {
+        console.log('⚠️ Missing required parameters');
+        return res.status(400).send('Employee ID, month, and year are required');
+    }
+    
+    // First check if the employee exists
+    db.query('SELECT id, name FROM employees WHERE id = ?', [employeeId], (err, employeeResults) => {
+        if (err) {
+            console.error('❌ Error checking employee:', err);
+            return res.status(500).send('Server error');
+        }
+        
+        if (employeeResults.length === 0) {
+            console.log('⚠️ Employee not found with ID:', employeeId);
+            return res.status(404).send('Employee not found');
+        }
+        
+        const employeeName = employeeResults[0].name;
+        console.log('✅ Found employee:', employeeName);
+        
+        // Now fetch attendance records for the specified month and year
+        db.query(
+            `SELECT a.date, a.status 
+             FROM attendance a 
+             WHERE a.employee_id = ? 
+             AND MONTH(a.date) = ? 
+             AND YEAR(a.date) = ?
+             ORDER BY a.date ASC`, 
+            [employeeId, month, year], 
+            (err, results) => {
+                if (err) {
+                    console.error('❌ Error fetching attendance records:', err);
+                    return res.status(500).send('Server error');
+                }
+                
+                console.log(`✅ Found ${results.length} attendance records for ${employeeName} in ${month}/${year}`);
+                
+                // Add employee name to each record
+                const recordsWithName = results.map(record => ({
+                    ...record,
+                    employeeName: employeeName
+                }));
+                
+                res.json(recordsWithName);
+            }
+        );
+    });
+});
+
+// Endpoint to get attendance records by month
+app.get('/get-attendance-by-month', (req, res) => {
+    const { employeeId, month, year } = req.query;
+    console.log('📊 Fetching attendance records:', { employeeId, month, year });
+
+    if (!employeeId || !month || !year) {
+        console.log('⚠️ Missing required parameters');
+        return res.status(400).json({ 
+            success: false, 
+            message: 'Employee ID, month, and year are required' 
+        });
+    }
+
+    const query = `
+        SELECT date, status 
+        FROM attendance 
+        WHERE employee_id = ? 
+        AND MONTH(date) = ? 
+        AND YEAR(date) = ?
+        ORDER BY date DESC
+    `;
+
+    db.query(query, [employeeId, month, year], (err, results) => {
+        if (err) {
+            console.error('❌ Error fetching attendance records:', err);
+            return res.status(500).json({ 
+                success: false, 
+                message: 'Error fetching attendance records' 
+            });
+        }
+
+        console.log(`✅ Found ${results.length} attendance records`);
+        res.json({ 
+            success: true, 
+            records: results 
+        });
+    });
+});
 
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
