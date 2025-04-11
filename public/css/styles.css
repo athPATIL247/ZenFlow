@@ -110,6 +110,7 @@
 .btn-outline-primary {
     color: var(--primary-color);
     border-color: var(--primary-color);
+    margin: 1rem 0;
 }
 
 .btn-outline-primary:hover {

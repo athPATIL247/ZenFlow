@@ -33,41 +33,76 @@
 //         showAlert(errorMessage, 'danger');
 //     }
 // }
-document.getElementById('loginForm').addEventListener('submit', handleEmployeeLogin);
+// document.getElementById('employeeLoginBtn').addEventListener('submit', handleEmployeeLogin);
 
 async function handleEmployeeLogin(event) {
     event.preventDefault();
-    const employeeId = document.querySelector('#employeeId').value;
-    const password = document.querySelector('#employeePassword').value;
+    
+    const employeeId = document.getElementById('employeeId').value;
+    const password = document.getElementById('employeePassword').value;
 
-    console.log('Attempting to log in with:', { employeeId, password }); // Debug log
+    if (!employeeId || !password) {
+        showAlert('Please enter both Employee ID and Password', 'danger');
+        return;
+    }
 
-    const response = await fetch('/login', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ username: employeeId, password })
-    });
+    try {
+        const response = await fetch('http://localhost:3001/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ 
+                username: employeeId, 
+                password: password 
+            })
+        });
 
-    if (response.ok) {
-        const data = await response.json();
-        console.log('Login response:', data); // Debug log
-        //    console.log(employeeId);
-        localStorage.setItem('employeeId', data.employeeId); // Ensure this is set correctly
-
-        // Convert to integer if necessary
-        localStorage.setItem('employeeId', parseInt(data.employeeId, 10));
-        if (data.role === 'admin') {
-            window.location.href = 'admin-dashboard.html';
+        if (response.ok) {
+            const data = await response.json();
+            console.log('Login successful:', data);
+            
+            // Store employee ID in localStorage
+            localStorage.setItem('employeeId', data.employeeId);
+            
+            // Redirect based on role
+            if (data.role === 'admin') {
+                window.location.href = 'admin-dashboard.html';
+            } else {
+                window.location.href = 'employee-dashboard.html';
+            }
         } else {
-            window.location.href = 'employee-dashboard.html';
+            const errorText = await response.text();
+            showAlert(errorText || 'Invalid credentials', 'danger');
         }
-    } else {
-        const errorMessage = await response.text();
-        showAlert(errorMessage, 'danger');
+    } catch (error) {
+        console.error('Login error:', error);
+        showAlert('Error during login. Please try again.', 'danger');
     }
 }
+
+// Function to show alerts
+function showAlert(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.role = 'alert';
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+
+    // Find the form and insert the alert before it
+    const form = document.getElementById('loginForm');
+    form.parentNode.insertBefore(alertDiv, form);
+
+    // Automatically remove the alert after 5 seconds
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 5000);
+}
+
+// Add event listener to the form
+document.getElementById('loginForm').addEventListener('submit', handleEmployeeLogin);
 
 async function handleAdminLogin(event) {
     event.preventDefault();

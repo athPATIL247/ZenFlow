@@ -58,7 +58,7 @@ async function fetchAttendanceHistory() {
     });
 }
 
-const name = document.getElementById('employeeName');
+// const name = document.getElementById('employeeName');
 
 // async function nameUpdate() {
 //     const employeeId = localStorage.getItem('employeeId');
@@ -148,7 +148,7 @@ function displayDepartmentInfo(info) {
     const row = document.createElement('tr');
     row.innerHTML = `
         <td>${info.name}</td>
-        <td>${info.department_name}</td>
+        <td>${info.position}</td>
     `;
     modalBody.appendChild(row);
 
@@ -236,7 +236,7 @@ async function updateEmployeeDetails() {
     const employeeId = getEmployeeId();
     if (!employeeId) {
         console.error('Cannot fetch employee details: No employee ID available');
-        document.getElementById('employeeName').innerHTML = 'Error: Not logged in';
+        // document.getElementById('employeeName').innerHTML = 'Error: Not logged in';
         document.getElementById('employeeDepartment').innerHTML = 'Error: Not logged in';
         document.getElementById('employeePosition').innerHTML = 'Error: Not logged in';
         return;
@@ -256,9 +256,9 @@ async function updateEmployeeDetails() {
         
         // displayDepartmentInfo(employeeData);
         // Update employee name
-        if (employeeData.name) {
-            document.getElementById('employeeName').innerHTML = employeeData.name;
-        }
+        // if (employeeData.name) {
+        //     document.getElementById('employeeName').innerHTML = employeeData.name;
+        // }
         
         // Update department
         if (employeeData.department_name) {
@@ -331,7 +331,7 @@ async function updateSalaryInfo() {
             const monthNames = ["January", "February", "March", "April", "May", "June", 
                                "July", "August", "September", "October", "November", "December"];
             const monthName = monthNames[latestSalary.payroll_month - 1];
-            document.getElementById('payrollMonth').innerHTML = monthName;
+            document.getElementById('payrollMonth').innerHTML = monthNames[new Date().getMonth()];
         } else {
             document.getElementById('baseSalary').innerHTML = 'Not Available';
             document.getElementById('payrollMonth').innerHTML = 'Not Available';

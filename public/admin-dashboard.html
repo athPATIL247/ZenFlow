@@ -26,6 +26,7 @@
             margin-left: 250px;
             padding: 20px;
             width: calc(100% - 250px);
+            margin-top: 5rem;
         }
     </style>
 </head>
@@ -53,8 +54,8 @@
     </nav>
 
     <!-- Sidebar -->
-    <div id="sidebar">
-        <h4 class="text-center">Manage Employees</h4>
+    <div id="sidebar" style="padding-top: 7rem;">
+        <!-- <h4 class="text-center">Manage Employees</h4> -->
         <ul class="nav flex-column">
             <li class="nav-item">
                 <button class="nav-link btn btn-outline-primary" data-bs-toggle="modal"
@@ -77,6 +78,9 @@
             </li>
             <li class="nav-item">
                 <button class="nav-link btn btn-outline-primary" id="viewSalaryHistory">View Salary History</button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link btn btn-outline-primary" id="viewDepartmentsButton">View Departments</button>
             </li>
         </ul>
     </div>
@@ -214,6 +218,58 @@
                         </div>
                         <button type="submit" class="btn btn-danger">View Attendance Records</button>
                     </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Salary History Employee Modal -->
+    <div class="modal fade" id="ViewSalaryHistoryEmployee" tabindex="-1"
+        aria-labelledby="ViewSalaryHistoryEmployeeLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="ViewSalaryHistoryEmployeeLabel">View Salary History</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="ViewSalaryHistoryForm">
+                        <div class="mb-3">
+                            <label for="ViewSalaryHistoryEmployeeId" class="form-label">Employee ID</label>
+                            <input type="number" class="form-control" id="ViewSalaryHistoryEmployeeId" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">View Salary History</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Salary History Display Modal -->
+    <div class="modal fade" id="salaryHistoryDisplayModal" tabindex="-1"
+        aria-labelledby="salaryHistoryDisplayModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="salaryHistoryDisplayModalLabel">Salary History</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Month</th>
+                                <th>Year</th>
+                                <th>Base Salary</th>
+                                <th>Income Tax</th>
+                                <th>PF</th>
+                                <th>LWP</th>
+                                <th>Total Deduction</th>
+                            </tr>
+                        </thead>
+                        <tbody id="salaryHistoryTableBody">
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>

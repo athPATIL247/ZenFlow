@@ -13,9 +13,9 @@ app.use(express.static('public'));
 //connection to the database
 const db = mysql.createConnection({
     host: 'localhost',
-    user: 'root', 
-    password: 'atharva@2005', 
-    database: 'zenflow' 
+    user: 'root',
+    password: 'atharva@2005',
+    database: 'zenflow'
 });
 
 db.connect((err) => {
@@ -28,26 +28,37 @@ db.connect((err) => {
 
 app.post('/login', (req, res) => {
     const { username, password } = req.body;
+    console.log('👤 Login attempt:', { username });
 
-    // Query to find user by employee_id
-    db.query('SELECT * FROM users WHERE employee_id = ?', [username], (err, results) => {
-        if (err) return res.status(500).send('Server error');
+    // Query to find user by employee_id AND password
+    const query = 'SELECT * FROM users WHERE employee_id = ? AND password = ?';
+
+    db.query(query, [username, password], (err, results) => {
+        if (err) {
+            console.error('❌ Database error:', err);
+            return res.status(500).send('Server error');
+        }
+
         if (results.length > 0) {
             const user = results[0];
-            res.json({ employeeId: user.employee_id, role: user.role }); // Ensure employee_id is returned
+            console.log('✅ Login successful:', user.employee_id);
+            res.json({
+                employeeId: user.employee_id,
+                role: user.role
+            });
         } else {
+            console.log('❌ Invalid credentials for:', username);
             res.status(401).send('Invalid credentials');
         }
     });
 });
-
 app.post('/add-employee', (req, res) => {
     const { name, departmentId, position, dateJoined } = req.body;
     console.log('📝 Adding new employee:', { name, departmentId, position, dateJoined });
 
     //insert the new employee
-    db.query('INSERT INTO employees (name, department_id, position, date_joined) VALUES (?, ?, ?, ?)', 
-        [name, departmentId, position, dateJoined], 
+    db.query('INSERT INTO employees (name, department_id, position, date_joined) VALUES (?, ?, ?, ?)',
+        [name, departmentId, position, dateJoined],
         (err, results) => {
             if (err) {
                 console.error('❌ Error adding employee:', err);
@@ -159,6 +170,44 @@ app.post('/remove-employee', (req, res) => {
     });
 });
 
+app.get('/view-departments', (req, res) => {
+    const query = `
+        SELECT d.id AS Department_ID, d.name AS Department_Name, 
+               e.id AS Employee_ID, e.name AS Employee_Name, e.position 
+        FROM departments d 
+        LEFT JOIN employees e ON d.id = e.department_id 
+        ORDER BY d.id, e.id;
+    `;
+
+    db.query(query, (err, results) => {
+        if (err) {
+            console.error('❌ Error fetching departments and employees:', err);
+            return res.status(500).send('Error fetching departments and employees');
+        }
+
+        // Group results by department
+        const departments = {};
+        results.forEach(row => {
+            const { Department_ID, Department_Name, Employee_ID, Employee_Name, position } = row;
+            if (!departments[Department_ID]) {
+                departments[Department_ID] = {
+                    name: Department_Name,
+                    employees: []
+                };
+            }
+            if (Employee_ID) {
+                departments[Department_ID].employees.push({
+                    id: Employee_ID,
+                    name: Employee_Name,
+                    position: position
+                });
+            }
+        });
+
+        res.json(departments);
+    });
+});
+
 app.get('/view-employees', (req, res) => {
     db.query('SELECT * FROM employees', (err, results) => {
         if (err) {
@@ -194,50 +243,50 @@ app.post('/mark-attendance', (req, res) => {
 
 app.get('/get-attendance', (req, res) => {
     const { employeeId } = req.query;
-    
+
     console.log('📊 Fetching attendance records for employee ID:', employeeId);
-    
+
     if (!employeeId) {
         console.log('⚠️ No employee ID provided');
         return res.status(400).send('Employee ID is required');
     }
-    
+
     // First check if the employee exists
     db.query('SELECT id, name FROM employees WHERE id = ?', [employeeId], (err, employeeResults) => {
         if (err) {
             console.error('❌ Error checking employee:', err);
             return res.status(500).send('Server error');
         }
-        
+
         if (employeeResults.length === 0) {
             console.log('⚠️ Employee not found with ID:', employeeId);
             return res.status(404).send('Employee not found');
         }
-        
+
         const employeeName = employeeResults[0].name;
         console.log('✅ Found employee:', employeeName);
-        
+
         // Now fetch attendance records
         db.query(
             `SELECT a.date, a.status 
              FROM attendance a 
              WHERE a.employee_id = ?
-             ORDER BY a.date DESC`, 
-            [employeeId], 
+             ORDER BY a.date DESC`,
+            [employeeId],
             (err, results) => {
                 if (err) {
                     console.error('❌ Error fetching attendance records:', err);
                     return res.status(500).send('Server error');
                 }
-                
+
                 console.log(`✅ Found ${results.length} attendance records for ${employeeName}`);
-                
+
                 // Add employee name to each record
                 const recordsWithName = results.map(record => ({
                     ...record,
                     employeeName: employeeName
                 }));
-                
+
                 res.json(recordsWithName);
             }
         );
@@ -258,7 +307,7 @@ app.get('/get-department/:employeeId', async (req, res) => {
             `SELECT e.name, e.position, d.name 
              FROM employees e 
              JOIN departments d ON e.department_id = d.id 
-             WHERE e.id = ?`, 
+             WHERE e.id = ?`,
             [employeeId]
         );
         console.log('Query results:', rows);
@@ -277,7 +326,7 @@ app.get('/get-department/:employeeId', async (req, res) => {
 
 // Handle salary payment insertion
 app.post('/add-salary-payment', (req, res) => {
-    console.log('🔥 API hit: /add-salary-payment'); 
+    console.log('🔥 API hit: /add-salary-payment');
     console.log('📩 Request Body:', req.body); // Check if data is received
 
     const { employeeId, baseSalary, payrollMonth, payrollYear } = req.body;
@@ -304,24 +353,29 @@ app.post('/add-salary-payment', (req, res) => {
 
 app.get('/get-salary-history', (req, res) => {
     const { employeeId } = req.query;
-
-    db.query('SELECT * FROM payroll WHERE id = ?', [employeeId], (err, results) => {
+    console.log('📊 Fetching salary history for employee:', employeeId);
+    if (!employeeId) {
+        return res.status(400).send('Employee ID is required');
+    }
+    const query = 'SELECT * FROM payroll WHERE id = ? ORDER BY payroll_year, payroll_month';
+    db.query(query, [employeeId], (err, results) => {
         if (err) {
-            console.error('Error fetching salary history:', err);
-            return res.status(500).send('Server error');
+            console.error('❌ Error fetching salary history:', err);
+            return res.status(500).send('Error fetching salary history');
         }
+        console.log(`✅ Found ${results.length} salary records`);
         res.json(results);
     });
 });
 
 // Example using Express and a SQL database
 app.get('/get-name/:employeeId', (req, res) => {
-    const {employeeId} = req.params;
+    const { employeeId } = req.params;
     console.log('Received request for employee name, ID:', employeeId);
     if (!employeeId) {
         console.error('No employee ID provided');
         return res.status(400).json({ error: 'Employee ID is required' });
-    }   
+    }
     const sql = "SELECT name FROM employees WHERE id = ?";
     db.query(sql, [employeeId], (err, result) => {
         if (err) return res.status(500).json({ error: err.message });
@@ -339,9 +393,9 @@ app.post('/get-attendance-by-month-admin', (req, res) => {
 
     if (!id || !month || !year) {
         console.log('⚠️ Missing required parameters');
-        return res.status(400).json({ 
-            success: false, 
-            message: 'Employee ID, month, and year are required' 
+        return res.status(400).json({
+            success: false,
+            message: 'Employee ID, month, and year are required'
         });
     }
 
@@ -357,9 +411,9 @@ app.post('/get-attendance-by-month-admin', (req, res) => {
     db.query(query, [id, month, year], (err, results) => {
         if (err) {
             console.error('❌ Error fetching attendance records:', err);
-            return res.status(500).json({ 
-                success: false, 
-                message: 'Error fetching attendance records' 
+            return res.status(500).json({
+                success: false,
+                message: 'Error fetching attendance records'
             });
         }
 
@@ -374,9 +428,9 @@ app.post('/get-attendance-by-month-admin', (req, res) => {
 
     if (!id || !month || !year) {
         console.log('⚠️ Missing required parameters');
-        return res.status(400).json({ 
-            success: false, 
-            message: 'Employee ID, month, and year are required' 
+        return res.status(400).json({
+            success: false,
+            message: 'Employee ID, month, and year are required'
         });
     }
 
@@ -392,9 +446,9 @@ app.post('/get-attendance-by-month-admin', (req, res) => {
     db.query(query, [id, month, year], (err, results) => {
         if (err) {
             console.error('❌ Error fetching attendance records:', err);
-            return res.status(500).json({ 
-                success: false, 
-                message: 'Error fetching attendance records' 
+            return res.status(500).json({
+                success: false,
+                message: 'Error fetching attendance records'
             });
         }
 
