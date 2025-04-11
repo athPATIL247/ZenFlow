@@ -58,85 +58,6 @@ app.post('/add-employee', (req, res) => {
         });
 });
 
-// app.post('/remove-employee', (req, res) => {
-//     const { id } = req.body;
-//     console.log('🗑️ Attempting to remove employee with ID:', id);
-
-//     if (!id) {
-//         console.log('⚠️ No employee ID provided');
-//         return res.status(400).send('Employee ID is required');
-//     }
-
-//     // First check if the employee exists
-//     db.query('SELECT id, name FROM employees WHERE id = ?', [id], (err, employeeResults) => {
-//         if (err) {
-//             console.error('❌ Error checking employee:', err);
-//             return res.status(500).send('Error checking employee: ' + err.message);
-//         }
-        
-//         if (employeeResults.length === 0) {
-//             console.log('⚠️ Employee not found with ID:', id);
-//             return res.status(404).send('Employee not found');
-//         }
-        
-//         const employeeName = employeeResults[0].name;
-//         console.log('✅ Found employee:', employeeName);
-        
-//         // Start a transaction to ensure all related records are deleted
-//         db.beginTransaction(err => {
-//             if (err) {
-//                 console.error('❌ Error starting transaction:', err);
-//                 return res.status(500).send('Error starting transaction: ' + err.message);
-//             }
-            
-//             // First delete related records from payroll table
-//             db.query('DELETE FROM payroll WHERE id = ?', [id], (err, payrollResults) => {
-//                 if (err) {
-//                     console.error('❌ Error deleting payroll records:', err);
-//                     return db.rollback(() => {
-//                         res.status(500).send('Error deleting payroll records: ' + err.message);
-//                     });
-//                 }
-//                 console.log(`✅ Deleted ${payrollResults.affectedRows} payroll records`);
-                
-//                 // Then delete related records from attendance table
-//                 db.query('DELETE FROM attendance WHERE employee_id = ?', [id], (err, attendanceResults) => {
-//                     if (err) {
-//                         console.error('❌ Error deleting attendance records:', err);
-//                         return db.rollback(() => {
-//                             res.status(500).send('Error deleting attendance records: ' + err.message);
-//                         });
-//                     }
-//                     console.log(`✅ Deleted ${attendanceResults.affectedRows} attendance records`);
-                    
-//                     // Finally delete the employee
-//                     db.query('DELETE FROM employees WHERE id = ?', [id], (err, employeeResults) => {
-//                         if (err) {
-//                             console.error('❌ Error deleting employee:', err);
-//                             return db.rollback(() => {
-//                                 res.status(500).send('Error deleting employee: ' + err.message);
-//                             });
-//                         }
-                        
-//                         // Commit the transaction
-//                         db.commit(err => {
-//                             if (err) {
-//                                 console.error('❌ Error committing transaction:', err);
-//                                 return db.rollback(() => {
-//                                     res.status(500).send('Error committing transaction: ' + err.message);
-//                                 });
-//                             }
-                            
-//                             console.log(`✅ Successfully removed employee ${employeeName} (ID: ${id})`);
-//                             res.send(`Employee ${employeeName} removed successfully`);
-//                         });
-//                     });
-//                 });
-//             });
-//         });
-//     });
-// });
-
 app.post('/remove-employee', (req, res) => {
     const { id } = req.body;
     console.log('🗑️ Attempting to remove employee with ID:', id);
@@ -394,7 +315,6 @@ app.get('/get-salary-history', (req, res) => {
 });
 
 // Example using Express and a SQL database
-// Example using Express and a SQL database
 app.get('/get-name/:employeeId', (req, res) => {
     const {employeeId} = req.params;
     console.log('Received request for employee name, ID:', employeeId);
@@ -413,66 +333,11 @@ app.get('/get-name/:employeeId', (req, res) => {
     });
 });
 
-app.get('/get-attendance-by-month', (req, res) => {
-    const { employeeId, month, year } = req.query;
-    
-    console.log('📊 Fetching attendance records for employee ID:', employeeId, 'Month:', month, 'Year:', year);
-    
-    if (!employeeId || !month || !year) {
-        console.log('⚠️ Missing required parameters');
-        return res.status(400).send('Employee ID, month, and year are required');
-    }
-    
-    // First check if the employee exists
-    db.query('SELECT id, name FROM employees WHERE id = ?', [employeeId], (err, employeeResults) => {
-        if (err) {
-            console.error('❌ Error checking employee:', err);
-            return res.status(500).send('Server error');
-        }
-        
-        if (employeeResults.length === 0) {
-            console.log('⚠️ Employee not found with ID:', employeeId);
-            return res.status(404).send('Employee not found');
-        }
-        
-        const employeeName = employeeResults[0].name;
-        console.log('✅ Found employee:', employeeName);
-        
-        // Now fetch attendance records for the specified month and year
-        db.query(
-            `SELECT a.date, a.status 
-             FROM attendance a 
-             WHERE a.employee_id = ? 
-             AND MONTH(a.date) = ? 
-             AND YEAR(a.date) = ?
-             ORDER BY a.date ASC`, 
-            [employeeId, month, year], 
-            (err, results) => {
-                if (err) {
-                    console.error('❌ Error fetching attendance records:', err);
-                    return res.status(500).send('Server error');
-                }
-                
-                console.log(`✅ Found ${results.length} attendance records for ${employeeName} in ${month}/${year}`);
-                
-                // Add employee name to each record
-                const recordsWithName = results.map(record => ({
-                    ...record,
-                    employeeName: employeeName
-                }));
-                
-                res.json(recordsWithName);
-            }
-        );
-    });
-});
+app.post('/get-attendance-by-month-admin', (req, res) => {
+    const { id, month, year } = req.body;
+    console.log('📊 Fetching attendance records:', { id, month, year });
 
-// Endpoint to get attendance records by month
-app.get('/get-attendance-by-month', (req, res) => {
-    const { employeeId, month, year } = req.query;
-    console.log('📊 Fetching attendance records:', { employeeId, month, year });
-
-    if (!employeeId || !month || !year) {
+    if (!id || !month || !year) {
         console.log('⚠️ Missing required parameters');
         return res.status(400).json({ 
             success: false, 
@@ -481,7 +346,7 @@ app.get('/get-attendance-by-month', (req, res) => {
     }
 
     const query = `
-        SELECT date, status 
+        SELECT * 
         FROM attendance 
         WHERE employee_id = ? 
         AND MONTH(date) = ? 
@@ -489,7 +354,7 @@ app.get('/get-attendance-by-month', (req, res) => {
         ORDER BY date DESC
     `;
 
-    db.query(query, [employeeId, month, year], (err, results) => {
+    db.query(query, [id, month, year], (err, results) => {
         if (err) {
             console.error('❌ Error fetching attendance records:', err);
             return res.status(500).json({ 
@@ -499,10 +364,42 @@ app.get('/get-attendance-by-month', (req, res) => {
         }
 
         console.log(`✅ Found ${results.length} attendance records`);
-        res.json({ 
-            success: true, 
-            records: results 
+        res.json(results); // Return the results directly
+    });
+});
+// Endpoint to get attendance records by month
+app.post('/get-attendance-by-month-admin', (req, res) => {
+    const { id, month, year } = req.body;
+    console.log('📊 Fetching attendance records:', { id, month, year });
+
+    if (!id || !month || !year) {
+        console.log('⚠️ Missing required parameters');
+        return res.status(400).json({ 
+            success: false, 
+            message: 'Employee ID, month, and year are required' 
         });
+    }
+
+    const query = `
+        SELECT * 
+        FROM attendance 
+        WHERE employee_id = ? 
+        AND MONTH(date) = ? 
+        AND YEAR(date) = ?
+        ORDER BY date DESC
+    `;
+
+    db.query(query, [id, month, year], (err, results) => {
+        if (err) {
+            console.error('❌ Error fetching attendance records:', err);
+            return res.status(500).json({ 
+                success: false, 
+                message: 'Error fetching attendance records' 
+            });
+        }
+
+        console.log(`✅ Found ${results.length} attendance records`);
+        res.json(results); // Return the results directly
     });
 });
 

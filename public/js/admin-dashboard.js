@@ -219,6 +219,68 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+
+    document.getElementById('ViewAttendanceEmployeeForm').addEventListener('submit', async function(event) {
+        event.preventDefault();
+        console.log('🗑️ Fetch attendance form submitted');
+    
+        const id = document.getElementById('ViewAttendanceEmployeeId').value;
+        const month = document.getElementById('ViewAttendanceEmployeeMonth').value;
+        const year = document.getElementById('ViewAttendanceEmployeeYear').value;
+        console.log('📝 Employee ID to fetch:', id);
+    
+        if (!id || !month || !year) {
+            console.log('⚠️ Missing required fields');
+            alert('Please enter Employee ID, Month, and Year');
+            return;
+        }
+    
+        // Show loading state
+        const submitButton = this.querySelector('button[type="submit"]');
+        const originalButtonText = submitButton.textContent;
+        submitButton.disabled = true;
+        submitButton.textContent = 'Fetching...';
+    
+        try {
+            console.log('🌐 Sending request to fetch attendance records of employee');
+            const response = await fetch('http://localhost:3001/get-attendance-by-month-admin', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ id, month, year })
+            });
+    
+            console.log('📥 Server response status:', response.status);
+            
+            if (response.ok) {
+                const records = await response.json();
+                console.log('✅ Attendance records fetched:', records);
+                displayAttendanceRecords(records); // Call the function to display records
+                
+                // Reset the form and close the modal
+                document.getElementById('ViewAttendanceEmployeeForm').reset();
+                const modal = bootstrap.Modal.getInstance(document.getElementById('ViewAttendanceEmployee'));
+                if (modal) {
+                    modal.hide(); // Close the modal
+                }
+            } else {
+                const errorMessage = await response.text();
+                console.error('❌ Server error:', errorMessage);
+                alert('Error: ' + errorMessage);
+            }
+        } catch (error) {
+            console.error('❌ Network error:', error);
+            alert('Error fetching attendance records: ' + error.message);
+        } finally {
+            // Reset button state
+            submitButton.disabled = false;
+            submitButton.textContent = originalButtonText;
+        }
+    });
+
+    
+
     // Handle viewing employees
     document.getElementById('viewEmployeesButton').addEventListener('click', async function() {
         const response = await fetch('/view-employees');
@@ -262,22 +324,14 @@ document.addEventListener('DOMContentLoaded', function() {
     function displayAttendanceRecords(records) {
         const tableBody = document.getElementById('attendanceTableBody');
         tableBody.innerHTML = ''; // Clear existing rows
-
+    
         if (records.length === 0) {
             const row = document.createElement('tr');
-            row.innerHTML = '<td colspan="3" class="text-center">No attendance records found</td>';
+            row.innerHTML = '<td colspan="2" class="text-center">No attendance records found</td>';
             tableBody.appendChild(row);
             return;
         }
-
-        // Add header row with employee name if available
-        if (records.length > 0 && records[0].employeeName) {
-            const headerRow = document.createElement('tr');
-            headerRow.className = 'table-primary';
-            headerRow.innerHTML = `<td colspan="3" class="text-center"><strong>Attendance Records for ${records[0].employeeName}</strong></td>`;
-            tableBody.appendChild(headerRow);
-        }
-
+    
         records.forEach(record => {
             const row = document.createElement('tr');
             
@@ -299,6 +353,9 @@ document.addEventListener('DOMContentLoaded', function() {
             `;
             tableBody.appendChild(row);
         });
+    
+        // Show the attendance records section
+        document.getElementById('attendanceRecordsSection').style.display = 'block';
     }
 
     // Add event listener for "View Department"
@@ -344,66 +401,5 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Handle attendance filter form submission
-    document.getElementById('attendanceFilterForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const employeeId = document.getElementById('attendanceEmployeeId').value;
-        const month = document.getElementById('attendanceMonth').value;
-        const year = document.getElementById('attendanceYear').value;
-        
-        if (!employeeId) {
-            alert('Please enter an Employee ID');
-            return;
-        }
-        
-        try {
-            console.log('🔍 Fetching attendance records for employee ID:', employeeId, 'Month:', month, 'Year:', year);
-            const response = await fetch(`http://localhost:3001/get-attendance-by-month?employeeId=${employeeId}&month=${month}&year=${year}`);
-            
-            if (!response.ok) {
-                const errorText = await response.text();
-                console.error('❌ Server error:', errorText);
-                throw new Error(errorText);
-            }
-            
-            const data = await response.json();
-            console.log('📊 Attendance records:', data);
-            
-            if (data.success) {
-                const tableBody = document.getElementById('attendanceTableBody');
-                tableBody.innerHTML = '';
-                
-                if (data.records.length === 0) {
-                    tableBody.innerHTML = '<tr><td colspan="2" class="text-center">No attendance records found for the selected criteria</td></tr>';
-                } else {
-                    data.records.forEach(record => {
-                        const row = document.createElement('tr');
-                        const date = new Date(record.date);
-                        const formattedDate = date.toLocaleDateString('en-US', { 
-                            year: 'numeric', 
-                            month: 'long', 
-                            day: 'numeric',
-                            weekday: 'long'
-                        });
-                        
-                        // Add status class for styling
-                        const statusClass = record.status === 'Present' ? 'text-success' : 'text-danger';
-                        
-                        row.innerHTML = `
-                            <td>${formattedDate}</td>
-                            <td class="${statusClass}">${record.status}</td>
-                        `;
-                        tableBody.appendChild(row);
-                    });
-                }
-            } else {
-                alert(data.message || 'Failed to fetch attendance records');
-            }
-        } catch (error) {
-            console.error('❌ Error fetching attendance records:', error);
-            alert('Error fetching attendance records: ' + error.message);
-        }
-    });
-
     console.log('Admin dashboard script loaded');
 });

@@ -57,19 +57,23 @@
         <h4 class="text-center">Manage Employees</h4>
         <ul class="nav flex-column">
             <li class="nav-item">
-                <button class="nav-link btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addEmployeeModal">Add Employee</button>
+                <button class="nav-link btn btn-outline-primary" data-bs-toggle="modal"
+                    data-bs-target="#addEmployeeModal">Add Employee</button>
             </li>
             <li class="nav-item">
-                <button class="nav-link btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#removeEmployeeModal">Remove Employee</button>
+                <button class="nav-link btn btn-outline-primary" data-bs-toggle="modal"
+                    data-bs-target="#removeEmployeeModal">Remove Employee</button>
             </li>
             <li class="nav-item">
                 <button class="nav-link btn btn-outline-primary" id="viewEmployeesButton">View Employees</button>
             </li>
             <li class="nav-item">
-                <button class="nav-link btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#ViewAttendanceEmployee" >View Attendance History</button>
+                <button class="nav-link btn btn-outline-primary" data-bs-toggle="modal"
+                    data-bs-target="#ViewAttendanceEmployee">View Attendance History</button>
             </li>
             <li class="nav-item">
-                <button class="nav-link btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#salaryPaymentModal">Salary Payment</button>
+                <button class="nav-link btn btn-outline-primary" data-bs-toggle="modal"
+                    data-bs-target="#salaryPaymentModal">Salary Payment</button>
             </li>
             <li class="nav-item">
                 <button class="nav-link btn btn-outline-primary" id="viewSalaryHistory">View Salary History</button>
@@ -105,44 +109,7 @@
         <!-- Attendance Records Section -->
         <div id="attendanceRecordsSection" style="display: none;">
             <h2 class="mb-4">Attendance Records</h2>
-            
-            <!-- Attendance Filter Form -->
-            <div class="card mb-4">
-                <div class="card-body">
-                    <form id="attendanceFilterForm" class="row g-3">
-                        <div class="col-md-4">
-                            <label for="attendanceEmployeeId" class="form-label">Employee ID</label>
-                            <input type="number" class="form-control" id="attendanceEmployeeId" required>
-                        </div>
-                        <div class="col-md-3">
-                            <label for="attendanceMonth" class="form-label">Month</label>
-                            <select class="form-select" id="attendanceMonth" required>
-                                <option value="">Select Month</option>
-                                <option value="1">January</option>
-                                <option value="2">February</option>
-                                <option value="3">March</option>
-                                <option value="4">April</option>
-                                <option value="5">May</option>
-                                <option value="6">June</option>
-                                <option value="7">July</option>
-                                <option value="8">August</option>
-                                <option value="9">September</option>
-                                <option value="10">October</option>
-                                <option value="11">November</option>
-                                <option value="12">December</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label for="attendanceYear" class="form-label">Year</label>
-                            <input type="number" class="form-control" id="attendanceYear" min="2000" max="2100" required>
-                        </div>
-                        <div class="col-md-2 d-flex align-items-end">
-                            <button type="submit" class="btn btn-primary w-100">View Records</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-            
+
             <!-- Attendance Records Table -->
             <div class="card">
                 <div class="card-body">
@@ -163,7 +130,8 @@
     </div>
 
     <!-- Add Employee Modal -->
-    <div class="modal fade" id="addEmployeeModal" tabindex="-1" aria-labelledby="addEmployeeModalLabel" aria-hidden="true">
+    <div class="modal fade" id="addEmployeeModal" tabindex="-1" aria-labelledby="addEmployeeModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -200,7 +168,8 @@
     </div>
 
     <!-- Remove Employee Modal -->
-    <div class="modal fade" id="removeEmployeeModal" tabindex="-1" aria-labelledby="removeEmployeeModalLabel" aria-hidden="true">
+    <div class="modal fade" id="removeEmployeeModal" tabindex="-1" aria-labelledby="removeEmployeeModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -221,7 +190,8 @@
     </div>
 
     <!-- View Attendance History Employee Modal -->
-    <div class="modal fade" id="ViewAttendanceEmployee" tabindex="-1" aria-labelledby="ViewAttendanceEmployeeLabel" aria-hidden="true">
+    <div class="modal fade" id="ViewAttendanceEmployee" tabindex="-1" aria-labelledby="ViewAttendanceEmployeeLabel"
+        aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -250,7 +220,8 @@
     </div>
 
     <!-- Department Information Modal -->
-    <div class="modal fade" id="departmentModal" tabindex="-1" aria-labelledby="departmentModalLabel" aria-hidden="true">
+    <div class="modal fade" id="departmentModal" tabindex="-1" aria-labelledby="departmentModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
@@ -275,7 +246,8 @@
     </div>
 
     <!-- Salary Payment Modal -->
-    <div class="modal fade" id="salaryPaymentModal" tabindex="-1" aria-labelledby="salaryPaymentModalLabel" aria-hidden="true">
+    <div class="modal fade" id="salaryPaymentModal" tabindex="-1" aria-labelledby="salaryPaymentModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -300,7 +272,8 @@
                             <label for="payrollYear" class="form-label">Year</label>
                             <input type="number" class="form-control" id="payrollYear" required>
                         </div>
-                        <button type="submit" class="btn btn-primary" id="submitBtnSalary">Submit Salary Payment</button>
+                        <button type="submit" class="btn btn-primary" id="submitBtnSalary">Submit Salary
+                            Payment</button>
                     </form>
                 </div>
             </div>

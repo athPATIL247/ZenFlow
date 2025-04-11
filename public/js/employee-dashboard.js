@@ -325,7 +325,7 @@ async function updateSalaryInfo() {
             const latestSalary = salaryHistory[salaryHistory.length - 1];
             
             // Update the base salary in the DOM
-            document.getElementById('baseSalary').innerHTML = `$${latestSalary.base_salary}`;
+            document.getElementById('baseSalary').innerHTML = `₹${latestSalary.base_salary}`;
             
             // Update the payroll month
             const monthNames = ["January", "February", "March", "April", "May", "June", 
@@ -364,4 +364,63 @@ document.addEventListener('DOMContentLoaded', () => {
 document.getElementById('viewEmployeesButton').addEventListener('click', function() {
     const employeeIdModal = new bootstrap.Modal(document.getElementById('employeeIdModal'));
     employeeIdModal.show();
+});
+
+document.getElementById('ViewAttendanceEmployeeForm').addEventListener('submit', async function(event) {
+    event.preventDefault();
+    console.log('🗑️ Fetch attendance form submitted');
+
+    const id = document.getElementById('ViewAttendanceEmployeeId').value;
+    const month = document.getElementById('ViewAttendanceEmployeeMonth').value;
+    const year = document.getElementById('ViewAttendanceEmployeeYear').value;
+    console.log('📝 Employee ID to fetch:', id);
+
+    if (!id || !month || !year) {
+        console.log('⚠️ Missing required fields');
+        alert('Please enter Employee ID, Month, and Year');
+        return;
+    }
+
+    // Show loading state
+    const submitButton = this.querySelector('button[type="submit"]');
+    const originalButtonText = submitButton.textContent;
+    submitButton.disabled = true;
+    submitButton.textContent = 'Fetching...';
+
+    try {
+        console.log('🌐 Sending request to fetch attendance records of employee');
+        const response = await fetch('http://localhost:3001/get-attendance-by-month-admin', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ id, month, year })
+        });
+
+        console.log('📥 Server response status:', response.status);
+        
+        if (response.ok) {
+            const records = await response.json();
+            console.log('✅ Attendance records fetched:', records);
+            displayAttendanceRecords(records); // Call the function to display records
+            
+            // Reset the form and close the modal
+            document.getElementById('ViewAttendanceEmployeeForm').reset();
+            const modal = bootstrap.Modal.getInstance(document.getElementById('ViewAttendanceEmployee'));
+            if (modal) {
+                modal.hide();
+            }
+        } else {
+            const errorMessage = await response.text();
+            console.error('❌ Server error:', errorMessage);
+            alert('Error: ' + errorMessage);
+        }
+    } catch (error) {
+        console.error('❌ Network error:', error);
+        alert('Error fetching attendance records: ' + error.message);
+    } finally {
+        // Reset button state
+        submitButton.disabled = false;
+        submitButton.textContent = originalButtonText;
+    }
 });
