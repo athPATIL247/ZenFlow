@@ -49,7 +49,9 @@ CREATE TABLE payroll (
   totalDeduction DECIMAL(10,2),
   payroll_month INT NOT NULL,
   payroll_year INT NOT NULL,
-  PRIMARY KEY (id, payroll_month, payroll_year)
+  PRIMARY KEY (id, payroll_month, payroll_year),
+  CONSTRAINT `fk_payroll_employee` 
+  FOREIGN KEY (`id`) REFERENCES `employees`(`id`) ON DELETE CASCADE
 );
 
 -- Triggers: 
@@ -109,7 +111,24 @@ BEGIN
     END IF;
 
     SET NEW.LWP = absent_days * (base_salary / total_days);
-    SET NEW.income_tax = base_salary * 0.10;
+
+    -- Set income tax based on base salary
+    IF base_salary <= 33000 THEN
+        SET NEW.income_tax = 0;
+    ELSEIF base_salary > 33000 AND base_salary <= 66000 THEN
+        SET NEW.income_tax = base_salary * 0.05;
+    ELSEIF base_salary > 66000 AND base_salary <= 100000 THEN
+        SET NEW.income_tax = base_salary * 0.10;
+    ELSEIF base_salary > 100000 AND base_salary <= 133000 THEN
+        SET NEW.income_tax = base_salary * 0.15;
+    ELSEIF base_salary > 133000 AND base_salary <= 166000 THEN
+        SET NEW.income_tax = base_salary * 0.20;
+    ELSEIF base_salary > 166000 AND base_salary <= 200000 THEN
+        SET NEW.income_tax = base_salary * 0.25;
+    ELSE
+        SET NEW.income_tax = base_salary * 0.30;
+    END IF;
+
     SET NEW.PF = base_salary * 0.12;
     SET NEW.totalDeduction = NEW.LWP + NEW.income_tax + NEW.PF;
 END;

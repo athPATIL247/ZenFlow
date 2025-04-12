@@ -66,7 +66,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             } catch (error) {
                 console.error('❌ Error:', error);
-                alert('Error recording salary payment: ' + error.message);
+                // alert('Error recording salary payment: ' + error.message);
             }
         });
     } else {
@@ -291,7 +291,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
     // Handle viewing employees
-    document.getElementById('viewEmployeesButton').addEventListener('click', async function () {
+    document.getElementById('viewEmployeesButton').addEventListener('click', async function (){
         const response = await fetch('/view-employees');
         const employees = await response.json();
         const tableBody = document.getElementById('employeeTableBody');
@@ -410,15 +410,16 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
         
-        // Get the month and year from the first record
-        const firstDate = new Date(records[0].date);
+        // Get the month and year from the first record or use current month
+        const firstDate = records.length ? new Date(records[0].date) : new Date();
         const month = firstDate.getMonth();
         const year = firstDate.getFullYear();
         
-        // Create a map of dates to status
+        // Create a map of dates to status for easier lookup
         const attendanceMap = {};
         records.forEach(record => {
             const date = new Date(record.date);
+            // Store date as day key (1-31)
             attendanceMap[date.getDate()] = record.status;
         });
         
@@ -450,16 +451,41 @@ document.addEventListener('DOMContentLoaded', function () {
         
         // Add cells for each day of the month
         for (let day = 1; day <= daysInMonth; day++) {
-            const status = attendanceMap[day];
+            // Create a date object for the current day
+            const currentDate = new Date(year, month, day);
+            // Get day of week (0 = Sunday, 6 = Saturday)
+            const dayOfWeek = currentDate.getDay();
+            
             let dayClass = 'calendar-day';
             let statusIndicator = '';
+            let status = attendanceMap[day];
             
-            if (status === 'Present') {
-                dayClass += ' present';
+            // If it's a weekday (Monday-Friday) and no attendance record exists, mark as Absent
+            // dayOfWeek: 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+            if (dayOfWeek > 0 && dayOfWeek < 6 && status === undefined) {
+                status = 'Absent';
+                // Add a note that this is auto-marked
+                statusIndicator = '<i class="fas fa-times-circle text-danger"></i><small class="auto-marked">(Auto)</small>';
+                dayClass += ' absent auto-marked';
+            } 
+            // If status is present from records
+            else if (status === 'Present') {
                 statusIndicator = '<i class="fas fa-check-circle text-success"></i>';
-            } else if (status === 'Absent') {
-                dayClass += ' absent';
+                dayClass += ' present';
+            } 
+            // If status is absent from records
+            else if (status === 'Absent') {
                 statusIndicator = '<i class="fas fa-times-circle text-danger"></i>';
+                dayClass += ' absent';
+            }
+            // Weekend days (Saturday/Sunday) with no records - mark with a different style
+            else if (dayOfWeek === 0 || dayOfWeek === 6) {
+                dayClass += ' weekend';
+            }
+            
+            // Add special styling for weekends
+            if (dayOfWeek === 0 || dayOfWeek === 6) {
+                dayClass += ' weekend';
             }
             
             calendarHTML += `
@@ -504,6 +530,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 .calendar-day.absent {
                     background-color: #ffebee;
                 }
+                .calendar-day.weekend {
+                    background-color: #f3f3f3;
+                    color: #999;
+                }
+                .calendar-day.auto-marked {
+                    background-color: #ffe0e0;
+                }
                 .month-year {
                     font-weight: bold;
                     font-size: 1.2em;
@@ -512,6 +545,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
                 .day-number {
                     font-weight: bold;
+                }
+                .auto-marked {
+                    display: block;
+                    font-size: 0.7em;
+                    color: #666;
                 }
             </style>
         `;
