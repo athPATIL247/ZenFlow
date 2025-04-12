@@ -7,74 +7,191 @@
     <title>Employee Dashboard - ZenRoll</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-
+    <link rel="stylesheet" href="css/styles.css">
     <style>
         body {
             display: flex;
             height: 100vh;
-            margin: 0;
-        }
-
-        nav {
-            z-index: 1;
-            /* Ensure navbar is above other content */
-            background-color: #1a237e;
-            /* Change navbar color to match admin-dashboard */
+            background-color: #f8f9fa;
         }
 
         #sidebar {
             width: 250px;
-            background-color: #f8f9fa;
-            /* Light gray */
+            background-color: #343a40;
             height: 100vh;
             position: fixed;
-            padding-top: 100px;
+            padding-top: 20px;
+            color: white;
         }
 
         #main-content {
             margin-left: 250px;
-            padding: 100px;
+            padding: 20px;
             width: calc(100% - 250px);
         }
 
-        h1 {
-            text-align: center;
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             margin-bottom: 20px;
         }
 
-        footer {
-            background-color: #343a40;
+        .card-header {
+            border-radius: 10px 10px 0 0;
+            background-color: #007bff;
             color: white;
-            padding: 20px 0;
+            font-weight: bold;
+        }
+
+        .stat-card {
             text-align: center;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            transition: transform 0.3s;
         }
 
-        .mark-attendance-container {
-            position: absolute;
-            top: 120px;
-            /* Adjust based on navbar height */
-            right: 20px;
-            /* Adjust for spacing */
-            z-index: 2;
-            /* Ensure it appears above other content */
+        .stat-card:hover {
+            transform: translateY(-5px);
         }
 
-        .profile-photo {
-            width: 150px;
-            height: 150px;
-            border-radius: 50%;
-            object-fit: cover;
-            margin-bottom: 20px;
+        .stat-card h3 {
+            font-size: 2rem;
+            margin-bottom: 0;
         }
 
-        .stats {
+        .stat-card p {
+            font-size: 1rem;
+            margin-top: 5px;
+        }
+
+        .bg-present {
+            background-color: #19b900;
+            color: white;
+        }
+
+        .bg-absent {
+            background-color: #ff1e34;
+            color: white;
+        }
+
+        .bg-hours {
+            background-color: #575757;
+            color: white;
+        }
+
+        .bg-rate {
+            background-color: #ffc107;
+            color: #343a40;
+        }
+
+        .calendar-container {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+        }
+
+        .calendar-header {
+            text-align: center;
+            font-weight: bold;
+            background-color: #007bff;
+            color: white;
+            padding: 5px;
+        }
+
+        .calendar-day {
+            text-align: center;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #e9ecef;
+        }
+
+        .present {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .absent {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .activity-item {
             display: flex;
-            justify-content: space-around;
-            margin-top: 20px;
+            margin-bottom: 15px;
+            padding: 10px;
+            border-left: 3px solid #007bff;
+            background-color: #f8f9fa;
         }
 
-        .stat {
-            text-align: center;
+        .activity-icon {
+            margin-right: 15px;
+            font-size: 24px;
+        }
+
+        .attendance-icon {
+            color: #28a745;
+        }
+
+        .salary-icon {
+            color: #17a2b8;
+        }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-time {
+            color: #6c757d;
+            font-size: 0.85rem;
+        }
+
+        .btn-mark-attendance {
+            background-color: #28a745;
+            color: white;
+            font-weight: bold;
+            padding: 10px 20px;
+            border-radius: 5px;
+            border: none;
+            transition: background-color 0.3s;
+        }
+
+        .btn-mark-attendance:hover {
+            background-color: #218838;
+        }
+
+        .nav-link {
+            color: white;
+            margin-bottom: 10px;
+            transition: background-color 0.3s;
+            border-radius: 5px;
+            padding: 10px 15px;
+        }
+
+        .nav-link:hover {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .nav-link.active {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .icon-present {
+            color: #28a745;
+        }
+
+        .icon-absent {
+            color: #dc3545;
+        }
+
+        .section-container {
+            display: none;
+        }
+
+        .section-container.active {
+            display: block;
         }
     </style>
 </head>
@@ -89,11 +206,10 @@
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            <div style="color:white; margin-left: 450px; font-weight :700; font-size:25px" >Employee Dashboard</div>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link active" href="employee-dashboard.html">Dashboard</a>
+                        <span class="nav-link" id="employeeNameDisplay">Welcome!</span>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="index.html">Logout</a>
@@ -103,139 +219,248 @@
         </div>
     </nav>
 
-    <!-- Mark Attendance Button -->
-    <div class="mark-attendance-container">
-        <button id="markAttendanceButton" class="btn btn-danger">Mark Attendance</button>
-    </div>
-
     <!-- Sidebar -->
     <div id="sidebar">
-        <ul class="nav flex-column">
-    <li class="nav-item">
-        <button class="nav-link btn btn-outline-primary" id="viewAttendance" style="width: 250px; margin-bottom: 20px">View Attendance</button>
-    </li>
-    <li class="nav-item">
-        <button class="nav-link btn btn-outline-primary" id="viewDepartment" style="width: 250px; margin-bottom: 20px">View Department</button>
-    </li>
-    <li class="nav-item">
-        <button class="nav-link btn btn-outline-primary" id="salaryHistoryButton" style="width: 250px; margin-bottom: 20px">Salary History</button>
-    </li>
-    <li class="nav-item">
-        <button class="nav-link btn btn-outline-primary" id="viewDepartmentsButton" style="width: 250px; margin-bottom: 20px">View Departments</button>    
-    </li>
-</ul>
+        <h4 class="text-center mb-4">Employee Portal</h4>
+        <ul class="nav flex-column px-3">
+            <li class="nav-item">
+                <a class="nav-link active" href="#" id="dashboardNavLink">
+                    <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" id="markAttendanceBtn">
+                    <i class="fas fa-calendar-check me-2"></i>Mark Attendance
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" id="viewAttendanceBtn">
+                    <i class="fas fa-calendar me-2"></i>Attendance History
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" id="viewSalaryBtn">
+                    <i class="fas fa-money-bill-alt me-2"></i>Salary Details
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" id="viewProfileBtn">
+                    <i class="fas fa-user me-2"></i>Profile
+                </a>
+            </li>
+        </ul>
     </div>
 
     <!-- Main Content -->
     <div id="main-content">
+        <!-- Dashboard Section -->
+        <div id="dashboardSection" class="section-container active">
+            <h1 class="mb-4">Dashboard <small class="text-muted" id="currentDate"></small></h1>
+            
+            <!-- Monthly Statistics Cards -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Monthly Statistics</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row" id="monthlyStatsContainer">
+                        <div class="col-md-3">
+                            <div class="stat-card bg-present">
+                                <i class="fas fa-calendar-check fa-2x mb-2"></i>
+                                <h3 id="presentDaysCount">--</h3>
+                                <p>Present Days</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card bg-absent">
+                                <i class="fas fa-calendar-times fa-2x mb-2"></i>
+                                <h3 id="absentDaysCount">--</h3>
+                                <p>Absent Days</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card bg-hours">
+                                <i class="fas fa-clock fa-2x mb-2"></i>
+                                <h3 id="workingHoursCount">--</h3>
+                                <p>Working Hours</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card bg-rate">
+                                <i class="fas fa-percentage fa-2x mb-2"></i>
+                                <h3 id="attendanceRateCount">--</h3>
+                                <p>Attendance Rate</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-        <!-- Employee Details Section -->
-        <div class="text-center">
-            <img src="./employeeIcon.png" alt="Profile Photo" class="profile-photo" id="profilePhoto" height="20px">
-            <h2 id="employeeName">John Doe</h2>
-            <p id="employeePosition">Software Engineer</p>
-            <p id="employeeDepartment">IT Department</p>
+            <!-- Today's Attendance Status -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-clipboard-check me-2"></i>Today's Attendance</h5>
+                </div>
+                <div class="card-body" id="todayAttendanceContainer">
+                    <div class="text-center py-4" id="markAttendanceContainer">
+                        <h5 class="mb-3">You haven't marked attendance for today</h5>
+                        <button class="btn btn-mark-attendance" id="quickMarkAttendanceBtn">
+                            <i class="fas fa-calendar-check me-2"></i>Mark Attendance
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Monthly Attendance Calendar -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Attendance Calendar</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-calendar"></i></span>
+                                <select class="form-select" id="calendarMonth">
+                                    <option value="1">January</option>
+                                    <option value="2">February</option>
+                                    <option value="3">March</option>
+                                    <option value="4">April</option>
+                                    <option value="5">May</option>
+                                    <option value="6">June</option>
+                                    <option value="7">July</option>
+                                    <option value="8">August</option>
+                                    <option value="9">September</option>
+                                    <option value="10">October</option>
+                                    <option value="11">November</option>
+                                    <option value="12">December</option>
+                                </select>
+                                <select class="form-select" id="calendarYear">
+                                    <!-- Will be populated dynamically -->
+                                </select>
+                                <button class="btn btn-primary" id="refreshCalendarBtn">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="attendanceCalendarContainer" class="mb-3">
+                        <!-- Calendar will be populated here -->
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6 class="card-title">Summary</h6>
+                                    <ul class="list-unstyled">
+                                        <li><i class="fas fa-calendar me-2"></i>Working Days: <span id="totalWorkingDays">--</span></li>
+                                        <li><i class="fas fa-calendar-check me-2 icon-present"></i>Present: <span id="monthPresentDays">--</span></li>
+                                        <li><i class="fas fa-calendar-times me-2 icon-absent"></i>Absent: <span id="monthAbsentDays">--</span></li>
+                                        <li><i class="fas fa-percentage me-2"></i>Rate: <span id="monthAttendanceRate">--</span>%</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-history me-2"></i>Recent Activity</h5>
+                </div>
+                <div class="card-body">
+                    <div id="recentActivityContainer">
+                        <!-- Recent activities will be populated here -->
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <!-- Attendance and Payroll Stats -->
-        <div class="stats">
-            <div class="stat">
-                <h4>Attendance</h4>
-                <p id="attendanceCount">20 Days</p>
-            </div>
-            <div class="stat">
-                <h4>Payroll Month</h4>
-                <p id="payrollMonth">March</p>
-            </div>
-            <div class="stat">
-                <h4>Base Salary</h4>
-                <p id="baseSalary">$3000</p>
+        <!-- Mark Attendance Section -->
+        <div id="attendanceSection" class="section-container">
+            <h1 class="mb-4">Mark Attendance</h1>
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-calendar-check me-2"></i>Today's Attendance</h5>
+                </div>
+                <div class="card-body" id="attendanceStatus">
+                    <!-- Attendance status will be populated here -->
+                </div>
             </div>
         </div>
 
-        <!-- Additional content can go here -->
+        <!-- Attendance History Section -->
+        <div id="attendanceHistorySection" class="section-container">
+            <h1 class="mb-4">Attendance History</h1>
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-history me-2"></i>Attendance Records</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="attendanceHistoryTable">
+                                <!-- Attendance records will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Salary Section -->
+        <div id="salaryHistorySection" class="section-container">
+            <h1 class="mb-4">Salary History</h1>
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-money-bill-alt me-2"></i>Salary Records</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Month</th>
+                                    <th>Year</th>
+                                    <th>Base Salary</th>
+                                    <th>Deductions</th>
+                                    <th>Net Salary</th>
+                                </tr>
+                            </thead>
+                            <tbody id="salaryHistoryTable">
+                                <!-- Salary records will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Section -->
+        <div id="profileSection" class="section-container">
+            <h1 class="mb-4">My Profile</h1>
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-user me-2"></i>Employee Information</h5>
+                </div>
+                <div class="card-body">
+                    <div id="profileInfo">
+                        <!-- Profile information will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- Attendance Records Modal -->
-    <div class="modal fade" id="attendanceModal" tabindex="-1" aria-labelledby="attendanceModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="attendanceModalLabel">Attendance Records</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody id="attendanceTableBody">
-                            <!-- Attendance records will be populated here -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Department Information Modal -->
-    <div class="modal fade" id="departmentModal" tabindex="-1" aria-labelledby="departmentModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="departmentModalLabel">Department Information</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Department Name</th>
-                                <th>Position</th>
-                            </tr>
-                        </thead>
-                        <tbody id="departmentTableBody">
-                            <!-- Department information will be populated here -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Salary History Modal -->
-    <div class="modal fade" id="salaryHistoryModal" tabindex="-1" aria-labelledby="salaryHistoryModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="salaryHistoryModalLabel">Salary History</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Base Salary</th>
-                                <th>Income Tax</th>
-                                <th>PF</th>
-                                <th>LWP</th>
-                                <th>Total Deduction</th>
-                                <th>Month</th>
-                                <th>Year</th>
-                            </tr>
-                        </thead>
-                        <tbody id="salaryHistoryTableBody">
-                            <!-- Salary history records will be populated here -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/employee-dashboard.js"></script>
 </body>

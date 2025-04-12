@@ -457,6 +457,570 @@ app.post('/get-attendance-by-month-admin', (req, res) => {
     });
 });
 
+// Monthly Statistics Endpoint
+app.get('/monthly-stats', (req, res) => {
+    const { employeeId, month, year } = req.query;
+    console.log('📊 Fetching monthly stats:', { employeeId, month, year });
+
+    if (!employeeId || !month || !year) {
+        console.log('⚠️ Missing required parameters');
+        return res.status(400).json({ 
+            success: false, 
+            message: 'Employee ID, month, and year are required' 
+        });
+    }
+
+    // Calculate the total number of days in the month
+    const daysInMonth = new Date(year, month, 0).getDate();
+    
+    // Calculate weekdays in the month (excluding weekends)
+    let workingDaysInMonth = 0;
+    for (let day = 1; day <= daysInMonth; day++) {
+        const date = new Date(year, month - 1, day);
+        const dayOfWeek = date.getDay(); // 0 is Sunday, 6 is Saturday
+        if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+            workingDaysInMonth++;
+        }
+    }
+
+    // Get attendance records for the employee in the specified month
+    const query = `
+        SELECT 
+            COUNT(CASE WHEN status = 'Present' THEN 1 END) as presentDays,
+            COUNT(CASE WHEN status = 'Absent' THEN 1 END) as absentDays,
+            SUM(work_hours) as totalWorkHours
+        FROM attendance 
+        WHERE employee_id = ? 
+        AND MONTH(date) = ? 
+        AND YEAR(date) = ?
+    `;
+
+    db.query(query, [employeeId, month, year], (err, results) => {
+        if (err) {
+            console.error('❌ Error fetching monthly stats:', err);
+            return res.status(500).json({ 
+                success: false, 
+                message: 'Error fetching monthly statistics' 
+            });
+        }
+
+        // Process the results
+        const stats = results[0] || { presentDays: 0, absentDays: 0, totalWorkHours: 0 };
+        
+        // Calculate additional statistics
+        const totalDaysRecorded = (stats.presentDays || 0) + (stats.absentDays || 0);
+        const attendanceRate = totalDaysRecorded > 0 
+            ? Math.round((stats.presentDays / totalDaysRecorded) * 100) 
+            : 0;
+        
+        // Calculate percentage of working days covered
+        const workingDaysCoverage = workingDaysInMonth > 0 
+            ? Math.round((totalDaysRecorded / workingDaysInMonth) * 100) 
+            : 0;
+        
+        // Prepare the response
+        const enhancedStats = {
+            ...stats,
+            daysInMonth: daysInMonth,
+            workingDaysInMonth: workingDaysInMonth,
+            attendanceRate: attendanceRate,
+            workingDaysCoverage: workingDaysCoverage,
+            presentDays: stats.presentDays || 0,
+            absentDays: stats.absentDays || 0,
+            totalWorkHours: stats.totalWorkHours || 0,
+            averageWorkHours: totalDaysRecorded > 0 
+                ? Math.round((stats.totalWorkHours || 0) / totalDaysRecorded * 10) / 10
+                : 0
+        };
+        
+        console.log('✅ Monthly stats calculated:', enhancedStats);
+        res.json({ success: true, stats: enhancedStats });
+    });
+});
+
+// Attendance Overview Endpoint
+app.get('/attendance-overview', (req, res) => {
+    const { employeeId, month, year } = req.query;
+    console.log('📊 Fetching attendance overview:', { employeeId, month, year });
+
+    if (!employeeId || !month || !year) {
+        console.log('⚠️ Missing required parameters');
+        return res.status(400).json({ 
+            success: false, 
+            message: 'Employee ID, month, and year are required' 
+        });
+    }
+
+    // Get the dates in the specified month
+    const daysInMonth = new Date(year, month, 0).getDate();
+    
+    // Query to get attendance records for the month
+    const query = `
+        SELECT 
+            date,
+            status,
+            work_hours,
+            leave_type
+        FROM attendance 
+        WHERE employee_id = ? 
+        AND MONTH(date) = ? 
+        AND YEAR(date) = ?
+        ORDER BY date
+    `;
+
+    db.query(query, [employeeId, month, year], (err, results) => {
+        if (err) {
+            console.error('❌ Error fetching attendance overview:', err);
+            return res.status(500).json({ 
+                success: false, 
+                message: 'Error fetching attendance overview' 
+            });
+        }
+
+        // Create a map of attendance records by date
+        const attendanceMap = {};
+        results.forEach(record => {
+            const dateObj = new Date(record.date);
+            const day = dateObj.getDate();
+            attendanceMap[day] = {
+                status: record.status,
+                work_hours: record.work_hours,
+                leave_type: record.leave_type
+            };
+        });
+
+        // Count present and absent days
+        const presentDays = results.filter(r => r.status === 'Present').length;
+        const absentDays = results.filter(r => r.status === 'Absent').length;
+        const totalDaysRecorded = presentDays + absentDays;
+
+        // Calculate attendance percentage
+        const attendancePercentage = totalDaysRecorded > 0 
+            ? (presentDays / totalDaysRecorded * 100).toFixed(1) 
+            : '0.0';
+
+        // Calculate total and average work hours
+        const totalWorkHours = results.reduce((sum, r) => sum + (r.work_hours || 0), 0);
+        const avgWorkHours = totalDaysRecorded > 0 
+            ? (totalWorkHours / totalDaysRecorded).toFixed(1) 
+            : '0.0';
+
+        // Create the overview object
+        const overview = {
+            attendance: results,
+            daysInMonth: daysInMonth,
+            totalWorkingDays: totalDaysRecorded,
+            presentDays: presentDays,
+            absentDays: absentDays,
+            attendancePercentage: attendancePercentage,
+            totalWorkHours: totalWorkHours,
+            avgWorkHours: avgWorkHours
+        };
+
+        console.log('✅ Attendance overview calculated');
+        res.json({ success: true, overview });
+    });
+});
+
+// Recent Activity Endpoint
+app.get('/recent-activity', (req, res) => {
+    const { employeeId } = req.query;
+    console.log('📊 Fetching recent activity for employee:', employeeId);
+
+    const query = `
+        (SELECT 
+            'attendance' as type,
+            date as timestamp,
+            CONCAT('Marked ', status, ' for ', DATE_FORMAT(date, '%M %d, %Y')) as description
+         FROM attendance 
+         WHERE employee_id = ?
+         ORDER BY date DESC
+         LIMIT 5)
+        UNION
+        (SELECT 
+            'salary' as type,
+            CONCAT(payroll_year, '-', payroll_month, '-01') as timestamp,
+            CONCAT('Salary processed for ', MONTHNAME(CONCAT(payroll_year, '-', payroll_month, '-01')), ' ', payroll_year) as description
+         FROM payroll 
+         WHERE id = ?
+         ORDER BY payroll_year DESC, payroll_month DESC
+         LIMIT 5)
+        ORDER BY timestamp DESC
+        LIMIT 10
+    `;
+
+    db.query(query, [employeeId, employeeId], (err, results) => {
+        if (err) {
+            console.error('❌ Error fetching recent activity:', err);
+            return res.status(500).json({ success: false, message: 'Error fetching recent activity' });
+        }
+        console.log(`✅ Found ${results.length} recent activities`);
+        res.json({ success: true, activities: results });
+    });
+});
+
+// Get employee profile details
+app.get('/get-employee', (req, res) => {
+    const { employeeId } = req.query;
+    console.log('👤 Fetching employee profile:', employeeId);
+
+    if (!employeeId) {
+        console.log('⚠️ No employee ID provided');
+        return res.status(400).json({ 
+            success: false, 
+            message: 'Employee ID is required' 
+        });
+    }
+
+    const query = `
+        SELECT e.*, d.name as department_name
+        FROM employees e
+        LEFT JOIN departments d ON e.department_id = d.id
+        WHERE e.id = ?
+    `;
+
+    db.query(query, [employeeId], (err, results) => {
+        if (err) {
+            console.error('❌ Error fetching employee profile:', err);
+            return res.status(500).json({ 
+                success: false, 
+                message: 'Error fetching employee profile: ' + err.message 
+            });
+        }
+        
+        if (results.length === 0) {
+            console.log('⚠️ Employee not found with ID:', employeeId);
+            return res.status(404).json({ 
+                success: false, 
+                message: 'Employee not found' 
+            });
+        }
+        
+        console.log('✅ Employee profile retrieved:', results[0]);
+        res.json({ 
+            success: true, 
+            employee: results[0] 
+        });
+    });
+});
+
+// Debug endpoint for monthly stats
+app.get('/debug-monthly-stats', (req, res) => {
+    const { employeeId, month, year } = req.query;
+    console.log('🔍 DEBUG: Fetching monthly stats:', { employeeId, month, year });
+
+    // Step 1: Check attendance table structure
+    db.query('DESCRIBE attendance', (err, tableInfo) => {
+        if (err) {
+            console.error('❌ Error describing attendance table:', err);
+            return res.status(500).json({ 
+                success: false, 
+                step: 'describe_table',
+                error: err.message 
+            });
+        }
+
+        // Step 2: Check if employee exists
+        db.query('SELECT * FROM employees WHERE id = ?', [employeeId], (err, employeeResults) => {
+            if (err) {
+                console.error('❌ Error checking employee existence:', err);
+                return res.status(500).json({ 
+                    success: false, 
+                    step: 'check_employee',
+                    error: err.message 
+                });
+            }
+
+            if (employeeResults.length === 0) {
+                return res.status(404).json({ 
+                    success: false, 
+                    message: 'Employee not found' 
+                });
+            }
+
+            // Step 3: Check raw attendance records
+            const attendanceQuery = `
+                SELECT * FROM attendance 
+                WHERE employee_id = ? 
+                AND MONTH(date) = ? 
+                AND YEAR(date) = ?
+            `;
+
+            db.query(attendanceQuery, [employeeId, month, year], (err, attendanceRecords) => {
+                if (err) {
+                    console.error('❌ Error fetching raw attendance records:', err);
+                    return res.status(500).json({ 
+                        success: false, 
+                        step: 'fetch_attendance',
+                        error: err.message 
+                    });
+                }
+
+                // Step 4: Calculate stats
+                const query = `
+                    SELECT 
+                        COUNT(CASE WHEN status = 'Present' THEN 1 END) as presentDays,
+                        COUNT(CASE WHEN status = 'Absent' THEN 1 END) as absentDays,
+                        SUM(work_hours) as totalWorkHours
+                    FROM attendance 
+                    WHERE employee_id = ? 
+                    AND MONTH(date) = ? 
+                    AND YEAR(date) = ?
+                `;
+
+                db.query(query, [employeeId, month, year], (err, statResults) => {
+                    if (err) {
+                        console.error('❌ Error calculating stats:', err);
+                        return res.status(500).json({ 
+                            success: false, 
+                            step: 'calculate_stats',
+                            error: err.message 
+                        });
+                    }
+
+                    // Return all debug info
+                    res.json({
+                        success: true,
+                        debug: {
+                            params: { employeeId, month, year },
+                            tableStructure: tableInfo,
+                            employee: employeeResults[0],
+                            rawAttendanceRecords: attendanceRecords,
+                            calculatedStats: statResults[0]
+                        }
+                    });
+                });
+            });
+        });
+    });
+});
+
+// Simple test endpoint
+app.get('/test', (req, res) => {
+    console.log('🔍 Test endpoint called');
+    res.json({ 
+        success: true, 
+        message: 'Server is running properly',
+        time: new Date().toISOString()
+    });
+});
+
+// Test monthly stats calculation directly
+app.get('/test-monthly-stats', (req, res) => {
+    const employeeId = req.query.employeeId || 3;
+    const month = req.query.month || new Date().getMonth() + 1;
+    const year = req.query.year || new Date().getFullYear();
+    
+    console.log('🔍 Test monthly stats with:', { employeeId, month, year });
+    
+    try {
+        // Simple SQL to count attendance
+        const query = `
+            SELECT 
+                COUNT(*) as totalRecords,
+                COUNT(CASE WHEN status = 'Present' THEN 1 END) as presentDays,
+                COUNT(CASE WHEN status = 'Absent' THEN 1 END) as absentDays
+            FROM attendance 
+            WHERE employee_id = ? 
+            AND MONTH(date) = ? 
+            AND YEAR(date) = ?
+        `;
+        
+        db.query(query, [employeeId, month, year], (err, results) => {
+            if (err) {
+                console.error('❌ SQL Error:', err);
+                return res.status(500).json({
+                    success: false,
+                    error: err.message,
+                    query: query,
+                    params: [employeeId, month, year]
+                });
+            }
+            
+            const stats = results[0] || { totalRecords: 0, presentDays: 0, absentDays: 0 };
+            
+            // Return basic stats
+            res.json({
+                success: true,
+                stats: stats,
+                params: { employeeId, month, year }
+            });
+        });
+    } catch (error) {
+        console.error('❌ Runtime error:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
+app.get('/get-today-attendance-count', (req, res) => {
+    const { date } = req.query;
+    console.log('📊 Fetching today\'s attendance count for date:', date);
+
+    if (!date) {
+        return res.status(400).json({ 
+            success: false, 
+            message: 'Date parameter is required' 
+        });
+    }
+
+    const query = `
+        SELECT COUNT(*) as count
+        FROM attendance
+        WHERE date = ? AND status = 'Present'
+    `;
+
+    db.query(query, [date], (err, results) => {
+        if (err) {
+            console.error('❌ Error fetching today\'s attendance count:', err);
+            return res.status(500).json({ 
+                success: false, 
+                message: 'Error fetching attendance count' 
+            });
+        }
+
+        console.log('✅ Today\'s attendance count:', results[0].count);
+        res.json({ 
+            success: true, 
+            count: results[0].count 
+        });
+    });
+});
+
+app.get('/get-attendance-trends', (req, res) => {
+    console.log('📊 Fetching attendance trends');
+
+    const query = `
+        SELECT 
+            MONTH(date) as month,
+            YEAR(date) as year,
+            COUNT(CASE WHEN status = 'Present' THEN 1 END) as present_count,
+            COUNT(*) as total_count
+        FROM attendance
+        WHERE date >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+        GROUP BY YEAR(date), MONTH(date)
+        ORDER BY year ASC, month ASC
+    `;
+
+    db.query(query, (err, results) => {
+        if (err) {
+            console.error('❌ Error fetching attendance trends:', err);
+            return res.status(500).json({ 
+                success: false, 
+                message: 'Error fetching attendance trends' 
+            });
+        }
+
+        // Calculate attendance rate for each month
+        const trends = results.map(row => {
+            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const attendanceRate = (row.present_count / row.total_count) * 100;
+            
+            return {
+                month: monthNames[row.month - 1],
+                year: row.year,
+                label: `${monthNames[row.month - 1]} ${row.year}`,
+                attendanceRate: Math.round(attendanceRate * 10) / 10
+            };
+        });
+
+        console.log('✅ Attendance trends fetched');
+        res.json({ 
+            success: true, 
+            trends: trends
+        });
+    });
+});
+
+app.get('/get-payroll-summary', (req, res) => {
+    const { period } = req.query;
+    console.log('📊 Fetching payroll summary for period:', period);
+
+    if (!period) {
+        return res.status(400).json({ 
+            success: false, 
+            message: 'Period parameter is required' 
+        });
+    }
+
+    let dateFilter;
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+    const currentMonth = currentDate.getMonth() + 1;
+
+    switch (period) {
+        case 'current_month':
+            dateFilter = `payroll_year = ${currentYear} AND payroll_month = ${currentMonth}`;
+            break;
+        case 'last_month':
+            // Calculate last month and year (handling December to January transition)
+            let lastMonth = currentMonth - 1;
+            let lastMonthYear = currentYear;
+            if (lastMonth === 0) {
+                lastMonth = 12;
+                lastMonthYear--;
+            }
+            dateFilter = `payroll_year = ${lastMonthYear} AND payroll_month = ${lastMonth}`;
+            break;
+        case 'last_3_months':
+            // Calculate 3 months ago (handling year transitions)
+            let threeMonthsAgo = currentMonth - 3;
+            let threeMonthsAgoYear = currentYear;
+            if (threeMonthsAgo <= 0) {
+                threeMonthsAgo += 12;
+                threeMonthsAgoYear--;
+            }
+            dateFilter = `(payroll_year > ${threeMonthsAgoYear} OR (payroll_year = ${threeMonthsAgoYear} AND payroll_month >= ${threeMonthsAgo}))`;
+            break;
+        case 'year_to_date':
+            dateFilter = `payroll_year = ${currentYear}`;
+            break;
+        default:
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Invalid period parameter' 
+            });
+    }
+
+    const query = `
+        SELECT 
+            SUM(base_salary) as total_salary,
+            SUM(income_tax) as total_tax,
+            SUM(PF) as total_pf,
+            SUM(LWP) as total_lwp,
+            SUM(totalDeduction) as total_deduction
+        FROM payroll
+        WHERE ${dateFilter}
+    `;
+
+    db.query(query, (err, results) => {
+        if (err) {
+            console.error('❌ Error fetching payroll summary:', err);
+            return res.status(500).json({ 
+                success: false, 
+                message: 'Error fetching payroll summary' 
+            });
+        }
+
+        // Get the summary data from results
+        const summary = results[0] || {
+            total_salary: 0,
+            total_tax: 0,
+            total_pf: 0,
+            total_lwp: 0,
+            total_deduction: 0
+        };
+
+        console.log('✅ Payroll summary fetched:', summary);
+        res.json({ 
+            success: true, 
+            summary: summary
+        });
+    });
+});
+
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });

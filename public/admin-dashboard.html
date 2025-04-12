@@ -12,14 +12,17 @@
         body {
             display: flex;
             height: 100vh;
+            background-color: #f8f9fc;
         }
 
         #sidebar {
             width: 250px;
-            background-color: #f8f9fa;
+            background-color: #fff;
             height: 100vh;
             position: fixed;
             padding-top: 20px;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+            z-index: 10;
         }
 
         #main-content {
@@ -27,6 +30,77 @@
             padding: 20px;
             width: calc(100% - 250px);
             margin-top: 5rem;
+        }
+        
+        .navbar {
+            background-color: #4e73df;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+            z-index: 20;
+        }
+        
+        .card {
+            border: none;
+            border-radius: 0.35rem;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1);
+            margin-bottom: 1.5rem;
+        }
+        
+        .card-header {
+            background-color: #f8f9fc;
+            border-bottom: 1px solid #e3e6f0;
+            padding: 0.75rem 1.25rem;
+        }
+        
+        .btn-outline-primary {
+            color: #4e73df;
+            border-color: #4e73df;
+            text-align: left;
+            transition: all 0.2s;
+            margin-bottom: 0.5rem;
+        }
+        
+        .btn-outline-primary:hover {
+            background-color: #4e73df;
+            color: white;
+        }
+        
+        .nav-category {
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-size: 0.65rem;
+            color: #b7b9cc;
+        }
+        
+        .table {
+            background-color: white;
+        }
+        
+        .text-success {
+            color: #1cc88a !important;
+        }
+        
+        .text-danger {
+            color: #e74a3b !important;
+        }
+        
+        /* Dashboard overview cards */
+        #dashboardOverview .card {
+            border-left: 0.25rem solid;
+            transition: transform 0.2s;
+        }
+        
+        #dashboardOverview .card:hover {
+            transform: translateY(-2px);
+        }
+        
+        /* Analytics dashboard styles */
+        #analyticsDashboardSection .card {
+            transition: transform 0.2s;
+        }
+        
+        #analyticsDashboardSection .card:hover {
+            transform: translateY(-2px);
         }
     </style>
 </head>
@@ -55,39 +129,199 @@
 
     <!-- Sidebar -->
     <div id="sidebar" style="padding-top: 7rem;">
-        <!-- <h4 class="text-center">Manage Employees</h4> -->
         <ul class="nav flex-column">
-            <li class="nav-item">
-                <button class="nav-link btn btn-outline-primary" data-bs-toggle="modal"
-                    data-bs-target="#addEmployeeModal">Add Employee</button>
+            <li class="nav-item mb-3">
+                <button class="nav-link btn btn-primary w-100" id="dashboardOverviewBtn">
+                    <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                </button>
             </li>
-            <li class="nav-item">
-                <button class="nav-link btn btn-outline-primary" data-bs-toggle="modal"
-                    data-bs-target="#removeEmployeeModal">Remove Employee</button>
+            
+            <li class="nav-category mb-2">
+                <small class="text-muted px-3">EMPLOYEE MANAGEMENT</small>
             </li>
-            <li class="nav-item">
-                <button class="nav-link btn btn-outline-primary" id="viewEmployeesButton">View Employees</button>
+            <li class="nav-item mb-1">
+                <button class="nav-link btn btn-outline-primary w-100" data-bs-toggle="modal"
+                    data-bs-target="#addEmployeeModal">
+                    <i class="fas fa-user-plus me-2"></i>Add Employee
+                </button>
             </li>
-            <li class="nav-item">
-                <button class="nav-link btn btn-outline-primary" data-bs-toggle="modal"
-                    data-bs-target="#ViewAttendanceEmployee">View Attendance History</button>
+            <li class="nav-item mb-1">
+                <button class="nav-link btn btn-outline-primary w-100" data-bs-toggle="modal"
+                    data-bs-target="#removeEmployeeModal">
+                    <i class="fas fa-user-minus me-2"></i>Remove Employee
+                </button>
             </li>
-            <li class="nav-item">
-                <button class="nav-link btn btn-outline-primary" data-bs-toggle="modal"
-                    data-bs-target="#salaryPaymentModal">Salary Payment</button>
+            <li class="nav-item mb-3">
+                <button class="nav-link btn btn-outline-primary w-100" id="viewEmployeesButton">
+                    <i class="fas fa-users me-2"></i>View Employees
+                </button>
             </li>
-            <li class="nav-item">
-                <button class="nav-link btn btn-outline-primary" id="viewSalaryHistory">View Salary History</button>
+            
+            <li class="nav-category mb-2">
+                <small class="text-muted px-3">ATTENDANCE & PAYROLL</small>
             </li>
-            <li class="nav-item">
-                <button class="nav-link btn btn-outline-primary" id="viewDepartmentsButton">View Departments</button>
+            <li class="nav-item mb-1">
+                <button class="nav-link btn btn-outline-primary w-100" data-bs-toggle="modal"
+                    data-bs-target="#ViewAttendanceEmployee">
+                    <i class="fas fa-calendar-check me-2"></i>View Attendance
+                </button>
+            </li>
+            <li class="nav-item mb-1">
+                <button class="nav-link btn btn-outline-primary w-100" data-bs-toggle="modal"
+                    data-bs-target="#salaryPaymentModal">
+                    <i class="fas fa-money-bill-wave me-2"></i>Salary Payment
+                </button>
+            </li>
+            <li class="nav-item mb-3">
+                <button class="nav-link btn btn-outline-primary w-100" id="viewSalaryHistory">
+                    <i class="fas fa-history me-2"></i>Salary History
+                </button>
+            </li>
+            
+            <li class="nav-category mb-2">
+                <small class="text-muted px-3">ORGANIZATION</small>
+            </li>
+            <li class="nav-item mb-1">
+                <button class="nav-link btn btn-outline-primary w-100" id="viewDepartmentsButton">
+                    <i class="fas fa-building me-2"></i>Departments
+                </button>
+            </li>
+            <li class="nav-item mb-3">
+                <button class="nav-link btn btn-outline-primary w-100" id="analyticsDashboardBtn">
+                    <i class="fas fa-chart-line me-2"></i>Analytics
+                </button>
             </li>
         </ul>
     </div>
 
     <!-- Main Content -->
     <div id="main-content">
-        <h1 class="text-center">Admin Dashboard</h1>
+        <h1 class="text-center mb-4">Admin Dashboard</h1>
+        
+        <!-- Dashboard Overview Section -->
+        <div id="dashboardOverview" class="mb-4">
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="fas fa-users me-2"></i>Total Employees</h5>
+                            <h2 class="card-text" id="totalEmployeesCount">0</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-success text-white">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="fas fa-building me-2"></i>Departments</h5>
+                            <h2 class="card-text" id="totalDepartmentsCount">0</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-info text-white">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="fas fa-calendar-check me-2"></i>Today's Attendance</h5>
+                            <h2 class="card-text" id="todayAttendanceCount">0</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-warning text-white">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="fas fa-calendar-day me-2"></i>Current Month</h5>
+                            <h2 class="card-text" id="currentMonthDisplay"></h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics Dashboard Section -->
+        <div id="analyticsDashboardSection" style="display: none;">
+            <h2 class="mb-4">Analytics Dashboard</h2>
+            
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Department Distribution</h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="departmentDistributionChart" height="250"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Monthly Attendance Trends</h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="attendanceTrendChart" height="250"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Payroll Summary</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group mb-3">
+                                        <label for="analyticsPeriodSelect">Select Period:</label>
+                                        <select class="form-control" id="analyticsPeriodSelect">
+                                            <option value="current_month">Current Month</option>
+                                            <option value="last_month">Last Month</option>
+                                            <option value="last_3_months">Last 3 Months</option>
+                                            <option value="year_to_date">Year to Date</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <div class="col-md-3">
+                                    <div class="card bg-light">
+                                        <div class="card-body text-center">
+                                            <h6 class="card-title">Total Salary Payout</h6>
+                                            <h3 class="mb-0" id="totalSalaryPayout">₹0</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card bg-light">
+                                        <div class="card-body text-center">
+                                            <h6 class="card-title">Total Tax Deductions</h6>
+                                            <h3 class="mb-0" id="totalTaxDeductions">₹0</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card bg-light">
+                                        <div class="card-body text-center">
+                                            <h6 class="card-title">Total PF Contributions</h6>
+                                            <h3 class="mb-0" id="totalPFContributions">₹0</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card bg-light">
+                                        <div class="card-body text-center">
+                                            <h6 class="card-title">LWP Deductions</h6>
+                                            <h3 class="mb-0" id="totalLWPDeductions">₹0</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- Employee Table Section -->
         <div id="employeeTableSection" style="display: none;">
@@ -115,7 +349,7 @@
             <h2 class="mb-4">Attendance Records</h2>
 
             <!-- Attendance Records Table -->
-            <div class="card">
+            <div class="card mb-4">
                 <div class="card-body">
                     <table class="table table-striped table-hover">
                         <thead class="table-dark">
@@ -128,6 +362,50 @@
                             <!-- Attendance records will be populated here -->
                         </tbody>
                     </table>
+                </div>
+            </div>
+            
+            <!-- Attendance Visualization -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Attendance Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <h6 class="card-title">Monthly Overview</h6>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Total Working Days:</span>
+                                        <strong id="totalWorkingDaysCount">0</strong>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Present Days:</span>
+                                        <strong id="presentDaysCount" class="text-success">0</strong>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Absent Days:</span>
+                                        <strong id="absentDaysCount" class="text-danger">0</strong>
+                                    </div>
+                                    <div class="d-flex justify-content-between">
+                                        <span>Attendance Rate:</span>
+                                        <strong id="attendanceRateDisplay">0%</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="card-title">Attendance Calendar</h6>
+                                    <div id="attendanceCalendar" class="mt-3">
+                                        <!-- Calendar will be generated here -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -337,6 +615,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="js/admin-dashboard.js"></script>
 </body>
 
