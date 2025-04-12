@@ -14,8 +14,8 @@ app.use(express.static('public'));
 const db = mysql.createConnection({
     host: 'localhost',
     user: 'root',
-    password: 'atharva@2005',
-    database: 'zenflow2'
+    password: 'YOUR_PASSWORD',
+    database: 'DATABASE_NAME'
 });
 
 db.connect((err) => {
